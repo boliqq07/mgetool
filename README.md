@@ -5,6 +5,13 @@ Some useful base tools for other mge packages, but without specific task.
 [![Version](https://img.shields.io/github/tag/boliqq07/mgetool.svg)](https://github.com/boliqq07/mgetool/releases/latest)
 ![pypi Versions](https://badge.fury.io/py/mgetool.svg)
 
+#Install
+```bash
+pip install mgetool
+```
+
+# contains
+
 export
 ----------------------
 **Store**
