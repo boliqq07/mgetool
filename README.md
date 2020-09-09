@@ -2,10 +2,10 @@
 Some useful base tools for other mge packages, but without specific task.
 
 [![Python Versions](https://img.shields.io/pypi/pyversions/mgetool.svg)](https://pypi.org/project/mgetool/)
-[![Version](https://img.shields.io/github/tag/boliqq07/mgetool.svg)](https://github.com/boliqq07/mgetool/releases/latest)
+[![Version](https://img.shields.io/github/tag/MGEdata/mgetool.svg)](https://github.com/MGEdata/mgetool/releases/latest)
 ![pypi Versions](https://badge.fury.io/py/mgetool.svg)
 
-#Install
+# Install
 ```bash
 pip install mgetool
 ```
