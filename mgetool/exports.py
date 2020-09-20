@@ -43,8 +43,9 @@ class Store(object):
     Store file to path.
 
     Default mode is "w" ,which can be"a+" in txt.
-    'w'       create a new file and open it for writing
-    'a+'       open for writing, appending to the end of the file if it exists
+    'w'       create a new file, open for writing, clear contents if it exists.
+    'a+'      open for writing, appending to the end of the file if it exists.
+    'n'       create a new file and open it for writing, the name are set by number.
     """
 
     def __init__(self, path=None, filename="filename", prefix: str = None):
@@ -81,7 +82,7 @@ class Store(object):
 
         self._filename = file_new_name or self.default_filename
 
-        if os.path.isfile('{}{}.{}'.format(self._prefix, self._filename, suffix)) and mode == "w":
+        if os.path.isfile('{}{}.{}'.format(self._prefix, self._filename, suffix)) and mode == "n":
             shu1 = 1
             while os.path.isfile('{}{}({}).{}'.format(self._prefix, self._filename, shu1, suffix)):
                 shu1 += 1
@@ -108,6 +109,8 @@ class Store(object):
 
         """
         self._check_name("csv", file_new_name, mode=mode)
+        if mode == "n":
+            mode = "w"
         if isinstance(data, (dict, list)):
             data = pd.DataFrame.from_dict(data).T
 
@@ -132,10 +135,12 @@ class Store(object):
         file_new_name:str
             file name, if None, default is "filename(i)".
         mode: str
-            "w" or "a+"
+            "w" or "a+" or "n"
 
         """
         self._check_name("txt", file_new_name, mode=mode)
+        if mode == "n":
+            mode = "w"
         document = open(self._filename, mode=mode)
         document.write(str(data))
         document.close()
@@ -197,13 +202,13 @@ class Store(object):
         file_new_name:str
             file name, if None, default is "filename(i)".
         mode: str
-            "w" or "a+".
+            "w" , "a+","n".
 
         """
         dict_func = {"txt": cls.to_txt, "pkl_sk": cls.to_pkl_sk, "pkl_pd": cls.to_pkl_pd,
                      "csv": cls.to_csv, "png": cls.to_png}
-        if suffix in ["pkl_sk", "pkl_pd", "png"] and mode != "w":
-            raise UserWarning('"pkl_sk","pkl_pd","png" just accept mode="w",the file would be stored respectively')
+        if suffix in ["pkl_sk", "pkl_pd", "png"] and mode == "a+":
+            raise UserWarning('"pkl_sk","pkl_pd","png" just accept mode="w" or "n",the file would be stored respectively')
 
         for data in tqdm(data_s):
             dict_func[suffix](data, file_new_name, mode=mode)
