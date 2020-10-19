@@ -278,7 +278,7 @@ class Store(object):
         [print(i) for i in self._file_list]
         return self._file_list
 
-    def start(self, file_new_name=None, mode="w"):
+    def start(self, file_new_name="print_log", mode="w"):
         """
         Parameters
         ----------
