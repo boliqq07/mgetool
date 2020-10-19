@@ -16,7 +16,9 @@ Notes:
 """
 
 import os
+import sys
 from os import remove
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -208,7 +210,8 @@ class Store(object):
         dict_func = {"txt": cls.to_txt, "pkl_sk": cls.to_pkl_sk, "pkl_pd": cls.to_pkl_pd,
                      "csv": cls.to_csv, "png": cls.to_png}
         if suffix in ["pkl_sk", "pkl_pd", "png"] and mode == "a+":
-            raise UserWarning('"pkl_sk","pkl_pd","png" just accept mode="w" or "n",the file would be stored respectively')
+            raise UserWarning(
+                '"pkl_sk","pkl_pd","png" just accept mode="w" or "n",the file would be stored respectively')
 
         for data in tqdm(data_s):
             dict_func[suffix](data, file_new_name, mode=mode)
@@ -275,8 +278,54 @@ class Store(object):
         [print(i) for i in self._file_list]
         return self._file_list
 
+    def start(self, file_new_name=None, mode="w"):
+        """
+        Parameters
+        ----------
+        data: object
+            data.
+        file_new_name:str
+            file name, if None, default is "filename(i)".
+        mode: str
+            "w" or "a+" or "n"
+
+        """
+
+        self._check_name("txt", file_new_name, mode=mode)
+
+        if mode == "n":
+            mode = "w"
+
+        sys.stdout = Logger(self._filename, mode=mode)
+
+    def end(self):
+        try:
+            sys.stdout.log.close()
+        except AttributeError:
+            pass
+
+
+class Logger(object):
+    def __init__(self, filename="Default.log", mode="a+"):
+        self.terminal = sys.stdout
+        self.log = open(filename, mode)
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass
+
 
 if __name__ == "__main__":
-    a = np.array([[1, 2], [3, 4]])
-    st = Store(r'C:\Users\Administrator\Desktop')
-    st.to_txt(a, file_new_name="filename", mode="a+")
+
+    st = Store()
+    st.start()
+
+    print(os.path.dirname(__file__))
+    print('------------------')
+    for i in tqdm(range(5, 10)):
+        print("this is the %d times" % i)
+
+    st.end()
