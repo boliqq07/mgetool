@@ -16,6 +16,8 @@ import random
 import time
 from collections.abc import Iterable
 from functools import partial, wraps
+from itertools import chain
+from sys import getsizeof
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
@@ -86,7 +88,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
     Parameters
     ----------
-    batch_size
+    batch_size:str,int
+
     respective:bool
         Import the parameters respectively or as a whole
     tq:bool
@@ -124,6 +127,44 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(*iter_i) for iter_i in iterable)
         else:
             return parallel(func(iter_i) for iter_i in iterable)
+
+
+def parallelize_parameter(func, iterable, respective=False, **kwargs):
+    """Decrease your output size of your function"""
+    import multiprocessing
+    maxx = multiprocessing.cpu_count()
+    n_jobs = maxx - 2
+
+    batch_size = [5, 10, 25, 50, 100]
+
+    iterable2 = []
+    for i, j in enumerate(iterable):
+        iterable2.append(j)
+        if i > 10:
+            break
+    iterable2 = [iterable2] * 300
+    iterable2 = list(chain(*iterable2))
+
+    t1 = time.time()
+    if respective:
+        a = list(func(*iter_i) for iter_i in iterable2[:16])
+    else:
+        a = list(func(iter_i) for iter_i in iterable2[:16])
+    t2 = time.time()
+    t12 = (t2 - t1) / 16
+    size = sum([getsizeof(i) for i in a]) / 16/1024
+    print("Time of calculation/each:%s," % t12, "each output size:%s Kbytes" % size)
+
+    for batch_sizei in batch_size:
+        t3 = time.time()
+        result = parallelize(n_jobs, func, iterable2, respective, batch_size=batch_sizei, **kwargs)
+        t4 = time.time()
+        t34 = t4 - t3
+        size2 = size * batch_sizei
+        print("Total time/each:%s," % (t34 / 300), "Return output time/each:%s," % (t34 / 300 - t12),
+              "Batch output size:%s Kbytes," % size2, "Batch_size:%s" % batch_sizei)
+
+    print("Choice the batch_size with min Total time.")
 
 
 def logg(func, printing=True, back=False):
@@ -324,3 +365,12 @@ class TTClass(_TTClass):
 
 
 tt = TTClass()
+
+if __name__ == "__main__":
+    def func(n):
+        time.sleep(0.001)
+        s = np.random.random((100, 20))
+        return s
+
+    iterable = np.arange(1000)
+    parallelize_parameter(func, iterable, respective=False)
