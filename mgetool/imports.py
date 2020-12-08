@@ -70,7 +70,7 @@ class Call(object):
 
         Parameters
         ----------
-        paths:list of str
+        paths:list
             list of path
         backend:str
             default imported type to show
@@ -254,10 +254,21 @@ def check_file(spath, file_path, suffix=None):
 
 class BatchFile:
     """
-    Search files and filter files and re-site files
+    Search files and filter files and re-site files.
     """
 
     def __init__(self, path=None, suffix=None):
+        """
+
+        Parameters
+        ----------
+        path:str
+            total dir of all file
+        suffix:str
+            suffix of file
+            Examples:
+                .txt
+        """
 
         path = def_pwd(path)
         self.path = path
@@ -271,6 +282,18 @@ class BatchFile:
         self.file_list_merge_new = []
 
     def filter_file_name(self, includ=None, exclud=None):
+        """
+
+        Parameters
+        ----------
+        includ:str
+            get the filename with include str
+            such as hold "ast_tep" with "ast" string
+        exclud: str
+            delete the filename with exclude str
+            such as hold "ast_cap" and delete "ast_tep" with "tep" str,
+
+        """
         file_list_filter = []
         for file_i in self.file_list:
             name = file_i[1]
@@ -290,6 +313,27 @@ class BatchFile:
         self.file_list = file_list_filter
 
     def filter_dir_name(self, includ=None, exclud=None, layer=-1):
+        """
+        Filter the dir(and its sub_file).
+
+        Parameters
+        ----------
+        includ:str
+            get the filename with include str
+            such as hold "ast_tep" with "ast" string
+        exclud: str
+            delete the filename with exclude str
+            such as hold "ast_cap" and delete "ast_tep" with "tep" str,
+        layer:int,list
+            Filter dir with target layer,all the dir should contain the sublayer!
+            Examples:
+                for /home,
+                /home/ast, -1
+                /home/ast/eag, -2
+                /home/ast/eag/kgg, -3
+
+        """
+
         file_list_filter = []
 
         for file_i in self.file_list:
@@ -317,6 +361,24 @@ class BatchFile:
         self.file_list = file_list_filter
 
     def merge(self, path=None, flatten=False, add_dir="3-layer"):
+        """
+
+        Parameters
+        ----------
+        path:str
+            new path
+        flatten:True
+            flatten the filtered file.
+            if flatten is dict, the key is the specific dir name,and value is True.
+            Examples:
+            flatten = {"asp":True}
+        add_dir:int,list
+            add the top dir_name to file to escape same name file.
+            only valid for flatten=True
+        Returns
+        -------
+            new filename
+        """
         if not path:
             path = self.path
             flatten = False
@@ -358,6 +420,24 @@ class BatchFile:
         return file_list_merge
 
     def to_path(self, new_path, flatten=True, add_dir="3-layer"):
+        """
+
+        Parameters
+        ----------
+        new_path:str
+            new path
+        flatten:bool,dict
+            flatten the filtered file.
+            if flatten is dict, the key is the specific dir name,and value is True.
+            Examples:
+            flatten = {"asp":True}
+        add_dir:list, int
+            add the top dir_name to file to escape same name file.
+            only valid for flatten=True
+        Returns
+        -------
+            file in path
+        """
         self.file_list_merge = self.merge()
         new_path = def_pwd(new_path)
         self.file_list_merge_new = self.merge(path=new_path, flatten=flatten, add_dir=add_dir)
@@ -375,7 +455,7 @@ class BatchFile:
 if __name__ == "__main__":
     # others please use shutil
     # shutil.copytree()
-    a = BatchFile(r"C:\Users\Administrator\Desktop\file")
-    # a.filter_dir_name("line",layer=-1)
-    a.filter_file_name("INCAR")
-    a.to_path(r"C:\Users\Administrator\Desktop\newss", add_dir=[-3, -2, -1], flatten=False)
+    a = BatchFile(r"C:\Users\wangchangxin\Desktop\d1")
+    a.filter_dir_name("a", layer=-1)
+    a.filter_file_name("2")
+    a.to_path(r"C:\Users\wangchangxin\Desktop\d2", add_dir=[-2, -1], flatten=True)
