@@ -17,13 +17,13 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='mgetool',
-    version='0.0.05',
+    version='0.0.06',
     keywords=["exports", "imports", "show", "tool", "newclass", "packbox"],
     description='This is an tool box contains tools for mgedata.'
                 'Some of code are non-originality, just copy for use. All the referenced code are marked,'
                 'details can be shown in their sources',
     install_requires=['pandas', 'numpy', 'sympy', 'scipy', 'scikit-learn', 'joblib', 'matplotlib',
-                      'seaborn', 'requests', 'tqdm', 'six'],
+                      'seaborn', 'requests', 'tqdm', 'six', 'scikit-image'],
     include_package_data=True,
     author='wangchangxin',
     author_email='986798607@qq.com',
