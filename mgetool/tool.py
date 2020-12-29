@@ -490,8 +490,8 @@ if __name__ == "__main__":
     tt.t
     s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000)
     tt.t
-    s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=True)
+    s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False)
     tt.t
-    s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, store=True)
+    s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
     tt.t
     tt.p
