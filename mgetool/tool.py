@@ -21,6 +21,7 @@ from sys import getsizeof
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
+from mgetool.exports import Store
 from tqdm import tqdm
 
 
@@ -80,9 +81,20 @@ def check_random_state(seed):
                      ' instance' % seed)
 
 
-def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', **kwargs):
+def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, **kwargs):
     """
-    parallelize the function for iterable.
+
+    Parallelize the function for iterable.
+
+    Note:
+        For "large" calculated function, with small return for each function.
+
+        def func:
+            'large' calculation.
+            ...
+            ...
+            ...
+            return int
 
     make sure in if __name__ == "__main__":
 
@@ -100,9 +112,12 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
     func:
         function to calculate
     iterable:
-        interable object
+        iterable object
     kwargs:
         kwargs for function
+    store:
+        Not been used.
+        store or not, if store, the result would be store to disk and return nothing.
 
     Returns
     -------
@@ -110,6 +125,7 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         function results
 
     """
+    _ = store
 
     func = partial(func, **kwargs)
     if effective_n_jobs(n_jobs) == 1:
@@ -127,6 +143,101 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(*iter_i) for iter_i in iterable)
         else:
             return parallel(func(iter_i) for iter_i in iterable)
+
+
+def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size=1000, store=None, **kwargs):
+    """
+    Parallelize the function for iterable.
+
+    The iterable would be batched into batch_size  for less resources transmission.
+
+    Note:
+    For "small" calculated function, with small return for each function.
+
+    def func:
+        'small' calculation.
+        ...
+        return int
+
+    make sure in if __name__ == "__main__":
+
+    Parameters
+    ----------
+    batch_size:int
+
+    respective:bool
+        Import the parameters respectively or as a whole
+    tq:bool
+         View Progress or not
+    n_jobs:int
+        cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
+    means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
+    func:
+        function to calculate
+    iterable:
+        iterable object
+    kwargs:
+        kwargs for function
+    store:bool,None
+        store or not, if store, the result would be store to disk and return nothing.
+
+    Returns
+    -------
+    results
+        function results
+
+    """
+
+    func = partial(func, **kwargs)
+
+    def func_batch_re(iterablei):
+
+        c = [func(*i) for i in list(iterablei)]
+        if store:
+            stt = Store()
+            stt.to_pkl_pd(c, mode="n")
+            return []
+        else:
+            return c
+
+    def func_batch_nre(iterablei):
+        c = [func(i) for i in list(iterablei)]
+        if store:
+            stt = Store()
+            stt.to_pkl_pd(c, mode="n")
+            return []
+        else:
+            return c
+
+    if effective_n_jobs(n_jobs) == 1:
+        parallel, func = list, func
+        iterables = [list(iterable), ]
+        func_batch=func
+    else:
+
+        iterable = list(iterable)
+        batch = len(iterable) // batch_size + 1
+        iterables = np.array_split(iterable, batch)
+
+        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
+
+        if respective:
+            func_batch = delayed(func_batch_re)
+        else:
+            func_batch = delayed(func_batch_nre)
+    try:
+        if tq:
+            y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables))
+        else:
+            y = parallel(func_batch_nre(iter_i) for iter_i in iterables)
+
+        ret = []
+        [ret.extend(i) for i in y]
+        return ret
+    except MemoryError:
+
+        raise MemoryError(
+            "The total size of calculation is out of Memory, please try ’store‘ result to disk but return to window")
 
 
 def parallelize_parameter(func, iterable, respective=False, **kwargs):
@@ -152,7 +263,7 @@ def parallelize_parameter(func, iterable, respective=False, **kwargs):
         a = list(func(iter_i) for iter_i in iterable2[:16])
     t2 = time.time()
     t12 = (t2 - t1) / 16
-    size = sum([getsizeof(i) for i in a]) / 16/1024
+    size = sum([getsizeof(i) for i in a]) / 16 / 1024
     print("Time of calculation/each:%s," % t12, "each output size:%s Kbytes" % size)
 
     for batch_sizei in batch_size:
@@ -351,10 +462,10 @@ class TTClass(_TTClass):
         super(_TTClass, self).__init__(**kwargs)
 
     def __getattribute__(self, item):
-        if item is "t":
+        if item == "t":
             _TTClass._t(self)
 
-        elif item is "p":
+        elif item == "p":
             _TTClass._p(self)
 
         elif item[-1] in "0123456789":
@@ -367,10 +478,20 @@ class TTClass(_TTClass):
 tt = TTClass()
 
 if __name__ == "__main__":
-    def func(n):
-        time.sleep(0.001)
-        s = np.random.random((100, 20))
+    def func(n,_=None):
+        # time.sleep(0.0001)
+        s = np.random.random((100, 50))
         return s
 
-    iterable = np.arange(1000)
-    parallelize_parameter(func, iterable, respective=False)
+    iterable = np.arange(10000)
+    iterable2 = np.arange(20000)
+    tt.t
+    s = parallelize(2, func, zip(iterable,iterable), respective=True, tq=True, batch_size=1000)
+    tt.t
+    s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000)
+    tt.t
+    s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=True)
+    tt.t
+    s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, store=True)
+    tt.t
+    tt.p

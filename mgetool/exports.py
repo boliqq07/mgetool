@@ -147,32 +147,36 @@ class Store(object):
         document.write(str(data))
         document.close()
 
-    def to_pkl_pd(self, data, file_new_name=None):
+    def to_pkl_pd(self, data, file_new_name=None, mode="n"):
         """
 
         Parameters
         ----------
         data: object
             data.
+        mode: str
+            ‘n’
         file_new_name:str
             file name, if None, default is "filename(i)".
 
         """
-        self._check_name("pkl_pd", file_new_name)
+        self._check_name("pkl_pd", file_new_name, mode=mode)
         pd.to_pickle(data, self._filename)
 
-    def to_pkl_sk(self, data, file_new_name=None):
+    def to_pkl_sk(self, data, file_new_name=None, mode="n"):
         """
 
         Parameters
         ----------
         data: object
             data.
+        mode: str
+            ‘n’
         file_new_name:str
             file name, if None, default is "filename(i)".
 
         """
-        self._check_name("pkl_sk", file_new_name)
+        self._check_name("pkl_sk", file_new_name, mode=mode)
         joblib.dump(data, self._filename)
 
     def to_png(self, data, file_new_name=None):
