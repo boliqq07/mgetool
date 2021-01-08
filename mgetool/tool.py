@@ -145,7 +145,7 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(iter_i) for iter_i in iterable)
 
 
-def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size=1000, store=None, **kwargs):
+def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, **kwargs):
     """
     Parallelize the function for iterable.
 
@@ -187,6 +187,8 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         function results
 
     """
+    if effective_n_jobs(n_jobs) == 1:
+        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store, **kwargs)
 
     func = partial(func, **kwargs)
 
@@ -209,17 +211,11 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         else:
             return c
 
-    if effective_n_jobs(n_jobs) == 1:
-        parallel, func = list, func
-        iterables = [list(iterable), ]
+    iterable = list(iterable)
+    batch = len(iterable) // batch_size + 1
+    iterables = np.array_split(iterable, batch)
 
-    else:
-
-        iterable = list(iterable)
-        batch = len(iterable) // batch_size + 1
-        iterables = np.array_split(iterable, batch)
-
-        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
+    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
 
     if respective:
         func_batch = delayed(func_batch_re)
@@ -487,12 +483,12 @@ if __name__ == "__main__":
     iterable = np.arange(10000)
     iterable2 = np.arange(20000)
     tt.t
-    s = parallelize(2, func, zip(iterable,iterable), respective=True, tq=True, batch_size=1000)
+    s = parallelize(1, func, zip(iterable,iterable), respective=True, tq=True, batch_size=1000)
     tt.t
-    s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000)
+    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
     tt.t
-    s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False)
+    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False)
     tt.t
-    s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
+    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
     tt.t
     tt.p
