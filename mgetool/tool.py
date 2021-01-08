@@ -212,7 +212,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     if effective_n_jobs(n_jobs) == 1:
         parallel, func = list, func
         iterables = [list(iterable), ]
-        func_batch=func
+
     else:
 
         iterable = list(iterable)
@@ -221,10 +221,11 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
         parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
 
-        if respective:
-            func_batch = delayed(func_batch_re)
-        else:
-            func_batch = delayed(func_batch_nre)
+    if respective:
+        func_batch = delayed(func_batch_re)
+    else:
+        func_batch = delayed(func_batch_nre)
+
     try:
         if tq:
             y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables))
