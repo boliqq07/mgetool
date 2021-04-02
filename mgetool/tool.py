@@ -17,6 +17,7 @@ import time
 from collections.abc import Iterable
 from functools import partial, wraps
 from itertools import chain
+from multiprocessing import Pool
 from sys import getsizeof
 
 import numpy as np
@@ -81,7 +82,7 @@ def check_random_state(seed):
                      ' instance' % seed)
 
 
-def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, **kwargs):
+def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j", **kwargs):
     """
 
     Parallelize the function for iterable.
@@ -119,6 +120,9 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         Not been used.
         store or not, if store, the result would be store to disk and return nothing.
 
+    mode:
+        "j":"joblib" or "m":"multiprocessing"
+
     Returns
     -------
     results
@@ -126,13 +130,19 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
     """
     _ = store
-
     func = partial(func, **kwargs)
+
+    if mode == "m":
+        with Pool(n_jobs) as p:
+            ret = p.map(func, iterable)
+        return ret
+
     if effective_n_jobs(n_jobs) == 1:
         parallel, func = list, func
     else:
         parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
         func = delayed(func)
+
     if tq:
         if respective:
             return parallel(func(*iter_i) for iter_i in tqdm(iterable))
@@ -145,7 +155,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(iter_i) for iter_i in iterable)
 
 
-def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, **kwargs):
+def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="j",
+                      **kwargs):
     """
     Parallelize the function for iterable.
 
@@ -176,6 +187,8 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         function to calculate
     iterable:
         iterable object
+    mode:
+        "j":"joblib" or "m":"multiprocessing"
     kwargs:
         kwargs for function
     store:bool,None
@@ -216,6 +229,13 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     iterables = np.array_split(iterable, batch)
 
     parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
+
+    if mode == "m":
+        with Pool(n_jobs) as p:
+            y = p.map(func_batch_re, iterables)
+        ret = []
+        [ret.extend(i) for i in y]
+        return ret
 
     if respective:
         func_batch = delayed(func_batch_re)
@@ -480,20 +500,30 @@ class TTClass(_TTClass):
 tt = TTClass()
 
 if __name__ == "__main__":
-    def func(n,_=None):
+    def func(n, _=None):
         # time.sleep(0.0001)
         s = np.random.random((100, 50))
         return s
 
+
     iterable = np.arange(10000)
     iterable2 = np.arange(20000)
     tt.t
-    s = parallelize(1, func, zip(iterable,iterable), respective=True, tq=True, batch_size=1000)
+    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
     tt.t
     s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
     tt.t
     s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False)
     tt.t
     s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
+
+    tt.t
+    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,mode="m")
+    tt.t
+    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000,mode="m")
+    tt.t
+    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False,mode="m")
+    tt.t
+    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False,mode="m")
     tt.t
     tt.p
