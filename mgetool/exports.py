@@ -179,7 +179,7 @@ class Store(object):
         self._check_name("pkl_sk", file_new_name, mode=mode)
         joblib.dump(data, self._filename)
 
-    def to_png(self, data, file_new_name=None):
+    def to_png(self, data, file_new_name=None, mode="w"):
         """
 
         Parameters
@@ -188,9 +188,10 @@ class Store(object):
             data.
         file_new_name:str
             file name, if None, default is "filename(i)".
-
+        mode: str
+            ‘n’
         """
-        self._check_name("png", file_new_name=file_new_name)
+        self._check_name("png", file_new_name=file_new_name, mode=mode)
         io.imsave(self._filename, data)
 
     @classmethod
@@ -279,15 +280,15 @@ class Store(object):
     @property
     def stored_file(self):
         """show the stored file"""
-        [print(i) for i in self._file_list]
+        [print(_) for _ in self._file_list]
         return self._file_list
 
     def start(self, file_new_name="print_log", mode="w"):
         """
+        only for single processing
+
         Parameters
         ----------
-        data: object
-            data.
         file_new_name:str
             file name, if None, default is "filename(i)".
         mode: str
@@ -302,10 +303,14 @@ class Store(object):
 
         sys.stdout = Logger(self._filename, mode=mode)
 
-    def end(self):
-        try:
-            sys.stdout.log.close()
-        except AttributeError:
+    @staticmethod
+    def end():
+        if hasattr(sys.stdout, "log"):
+            try:
+                sys.stdout.log.close()
+            except AttributeError:
+                pass
+        else:
             pass
 
 

@@ -94,6 +94,10 @@ class BasePlot(object):
         return plt
 
     def yy_numpy(self, y_true, y_predict, strx='y_true', stry='y_predict'):
+        """
+        y_true vs y_predict
+        """
+
         return self.scatter(y_true, y_predict, strx=strx, stry=stry)
 
     @staticmethod
@@ -129,6 +133,7 @@ class BasePlot(object):
         # fig.tight_layout()
 
         sns.boxplot()
+        return plt
 
     @staticmethod
     def scatter(y_true, y_predict, strx='y_true', stry='y_predict'):
@@ -139,6 +144,7 @@ class BasePlot(object):
         ax.plot([min(x), max(x)], [min(x), max(x)], '--', ms=5, lw=2, alpha=0.7, color='black')
         plt.xlabel(strx)
         plt.ylabel(stry)
+        return plt
 
     @staticmethod
     def lines(y, x=None, line_labels=None, strx='x', stry='y', ):
@@ -168,6 +174,7 @@ class BasePlot(object):
         plt.xlabel(strx)
         plt.ylabel(stry)
         ax.legend()
+        return plt
 
     @staticmethod
     def line_scatter(x, y_scatter, y_lines, strx='x', stry='y'):
@@ -178,6 +185,7 @@ class BasePlot(object):
         ax.plot(y_lines, '-', ms=5, lw=2, alpha=0.7, color='black')
         plt.xlabel(strx)
         plt.ylabel(stry)
+        return plt
 
     @staticmethod
     def corr(data, square=True, linewidths=.5, annot=False):
@@ -186,6 +194,7 @@ class BasePlot(object):
         # plt.xticks(rotation='90')
         sns.heatmap(data, cmap="seismic", square=square, linewidths=linewidths, annot=annot, xticklabels=True,
                     yticklabels=True)
+        return plt
 
     @staticmethod
     def violin(strx, stry, data):
@@ -203,6 +212,7 @@ class BasePlot(object):
                        split=True,  # 设置是否拆分小提琴图
                        inner="quartile"  # 设置内部显示类型 → “box”, “quartile”, “point”, “stick”, None
                        )
+        return plt
 
     @staticmethod
     def box(strx, stry, data):
@@ -217,17 +227,20 @@ class BasePlot(object):
                     )
 
         sns.swarmplot(x=strx, y=stry, data=data, color='k', size=3, alpha=0.8)
+        return plt
 
     @staticmethod
     def yy_jointplot(str_x, str_y, data):
         sns.jointplot(str_x, str_y, data,
                       kind='reg')
+        return plt
 
     @staticmethod
     def imshow(np_array):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.imshow(np_array)
+        return plt
 
     def show(self):
         plt.show()
@@ -304,7 +317,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
         else:
             types = None
 
-        if types is "pie":
+        if types == "pie":
             ax = plt.subplot(gs[i, j])
             ax.pie((size[i, j], or_size[i, j]), explode=explode, labels=None, autopct=None, shadow=False,
                    startangle=90,
@@ -314,7 +327,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
             ax.set_xlim(-1, 1)
             ax.axis('equal')
 
-        elif types is "fill":
+        elif types == "fill":
             ax = plt.subplot(gs[i, j])
             ax.set_facecolor(fill_colors[i, j])
             [ax.spines[_].set_color('w') for _ in ['right', 'top', 'left', 'bottom']]
@@ -322,7 +335,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
             ax.set_xticks([])
             ax.set_yticks([])
 
-        elif types is "fillandtext":
+        elif types == "fillandtext":
             ax = plt.subplot(gs[i, j])
             ax.set_facecolor(fill_colors[i, j])
             [ax.spines[_].set_color('w') for _ in ['right', 'top', 'left', 'bottom']]
@@ -331,7 +344,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
                     fontdict={"color": "black"},  # args
                     fontsize=score_fontsize,  # c_arg
                     horizontalalignment='center', verticalalignment='center')
-        elif types is "text":
+        elif types == "text":
             ax = plt.subplot(gs[i, j])
             ax.text(0.5, 0.5, size[i, j],
                     fontdict={"color": "b"},  # args
@@ -340,7 +353,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
             ax.set_xticks([])
             ax.set_yticks([])
             # plt.axis('off')
-        elif types is "circle":
+        elif types == "circle":
             ax = plt.subplot(gs[i, j])
             ax.axis('equal')
             ax.set_xlim(-1, 1)
@@ -366,10 +379,10 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
         ax.text(0.5, 0.5, name[k], fontsize=ax_fontsize, horizontalalignment='center', verticalalignment='center')
         ax.set_xticks([])
         ax.set_yticks([])
-        if label_axis is "left":
+        if label_axis == "left":
             color = ["w", "w", "b", "b"]
             [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
-        elif label_axis is "right":
+        elif label_axis == "right":
             color = ["b", "b", "w", "w"]
             [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
         else:
@@ -390,7 +403,7 @@ if __name__ == '__main__':
     data = load_boston(return_X_y=False)
 
     name0 = data["feature_names"]
-    x = data["datamnist"]
+    x = data["data"]
     y = data["target"]
     x_cof = np.corrcoef(x.T)
 

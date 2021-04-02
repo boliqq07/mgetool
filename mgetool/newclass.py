@@ -79,7 +79,7 @@ def expand_partial(func):
     return wrapper
 
 
-def create(name, base, **kargs):
+def create(name, base, **kwargs):
     """Creates a new class named *name* inheriting from *base* in the
     :mod:`~deap.creator` module. The new class can have attributes defined by
     the subsequent keyword arguments passed to the function create. If the
@@ -91,7 +91,7 @@ def create(name, base, **kargs):
 
     :param name: The name of the class to create.
     :param base: A base class from which to inherit.
-    :param kargs: One or more attributes or function to add on instantiation of this
+    :param kwargs: One or more attributes or function to add on instantiation of this
                       class, optional.
 
     The following is used to create a class :class:`Foo` inheriting from the
@@ -111,7 +111,7 @@ def create(name, base, **kargs):
             spam = 1
 
             def __init__(spath):
-                spath.bar = dict()
+                self.bar = dict()
 
             def func(self,*x)
                 return x
@@ -135,7 +135,7 @@ def create(name, base, **kargs):
 
     dict_inst = {}
     dict_cls = {}
-    for obj_name, obj in kargs.items():
+    for obj_name, obj in kwargs.items():
         if isinstance(obj, type):
             dict_inst[obj_name] = obj
         elif callable(obj):

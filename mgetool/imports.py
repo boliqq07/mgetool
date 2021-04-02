@@ -282,15 +282,15 @@ class BatchFile:
         self.file_list_merge = []
         self.file_list_merge_new = []
 
-    def filter_file_name(self, includ=None, exclud=None):
+    def filter_file_name(self, include=None, exclude=None):
         """
 
         Parameters
         ----------
-        includ:str
+        include:str
             get the filename with include str
             such as hold "ast_tep" with "ast" string
-        exclud: str
+        exclude: str
             delete the filename with exclude str
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
 
@@ -299,14 +299,14 @@ class BatchFile:
         for file_i in self.file_list:
             name = file_i[1]
 
-            if includ and not exclud:
-                if includ in name:
+            if include and not exclude:
+                if include in name:
                     file_list_filter.append(file_i)
-            elif not includ and exclud:
-                if exclud not in name:
+            elif not include and exclude:
+                if exclude not in name:
                     file_list_filter.append(file_i)
-            elif includ and exclud:
-                if includ in name and exclud not in name:
+            elif include and exclude:
+                if include in name and exclude not in name:
                     file_list_filter.append(file_i)
             else:
                 raise TypeError("one of includ, exclud must be str")
