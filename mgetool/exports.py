@@ -9,9 +9,7 @@
 
 """
 Notes:
-    export data simply
-    # Just a copy from xenonpy
-
+    export data simply.
 
 """
 
@@ -27,6 +25,7 @@ from tqdm import tqdm
 
 
 def def_pwd(path):
+    """check path, if not exists, make it"""
     if path is None:
         path = os.getcwd()
 
@@ -44,10 +43,33 @@ class Store(object):
     """
     Store file to path.
 
-    Default mode is "w" ,which can be"a+" in txt.
+    Default mode is "w" ,which can be "a+" in txt.
     'w'       create a new file, open for writing, clear contents if it exists.
     'a+'      open for writing, appending to the end of the file if it exists.
     'n'       create a new file and open it for writing, the name are set by number.
+
+    Example1:
+    ----------
+    >>> from mgetool.exports import Store
+    >>> st =  Store()
+    >>> a = ["data1","data2"]
+    >>> b = ["data1","data2"]
+    >>> st.to_csv(a)
+    >>> st.to_txt(b)
+    >>> st.to_pkl_pd(b)
+
+    Example2:
+    ----------
+    >>> from mgetool.exports import Store
+    >>> st =  Store()
+    >>> st.start()
+    >>> print(os.path.dirname(__file__))
+    >>> print('------------------')
+    >>> for i in tqdm(range(5, 10)):
+    >>>     print("this is the %d times" % i)
+
+    >>> st.end()
+
     """
 
     def __init__(self, path=None, filename="filename", prefix: str = None):
@@ -165,6 +187,7 @@ class Store(object):
 
     def to_pkl_sk(self, data, file_new_name=None, mode="n"):
         """
+        DeprecationWarning
 
         Parameters
         ----------
@@ -285,7 +308,7 @@ class Store(object):
 
     def start(self, file_new_name="print_log", mode="w"):
         """
-        only for single processing
+        only for single processing.
 
         Parameters
         ----------

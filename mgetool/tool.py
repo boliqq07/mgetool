@@ -450,9 +450,14 @@ class TTClass(_TTClass):
     """
     quick time.
     use tt object.
-    >>>tt.t
-    >>>#tt.t
-    >>>tt.p
+
+    Examples:
+    -----------
+    >>> tt.t
+    >>> a=4
+    >>> tt.t
+    >>> tt.p
+
     """
 
     def __init__(self, **kwargs):

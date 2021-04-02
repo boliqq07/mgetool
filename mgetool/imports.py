@@ -46,7 +46,8 @@ def def_pwd(path):
 
 class Call(object):
     """
-    Call file in paths
+    Call file in paths.
+
     """
 
     @staticmethod
@@ -75,7 +76,7 @@ class Call(object):
         backend:str
             default imported type to show
         prefix_with_upper:str
-            prefix_with_upper for all file add to file in this code to excape same name
+            prefix_with_upper for all file add to file in this code to escape same name
         index_col:
             use the first column as index in table.
         """
@@ -222,7 +223,7 @@ class Call(object):
         spath
         """
         if name in self.__extension__:
-            return self.__class__(*self._paths, backend=name, prefix=self._prefix)
+            return self.__class__(*self._paths, backend=name, prefix_with_upper=self._prefix)
         else:
             raise AttributeError("'%s' object has no attribute '%s'" % (self.__class__.__name__, name))
 
@@ -453,14 +454,14 @@ class BatchFile:
             shutil.copy(i, j)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # others please use shutil
     # shutil.copytree()
     # a = BatchFile(r"C:\Users\wangchangxin\Desktop\d1")
     # a.filter_dir_name("a", layer=-1)
     # a.filter_file_name("2")
     # a.to_path(r"C:\Users\wangchangxin\Desktop\d2", add_dir=[-2, -1], flatten=True)
-    bf = BatchFile(r"/home/iap13/wcx/CHG")
+    # bf = BatchFile(r"/home/iap13/wcx/CHG")
 
     # bf.filter_dir_name(includ="Mo")
-    filenames = bf.file_list
+    # filenames = bf.file_list
