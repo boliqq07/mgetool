@@ -28,8 +28,17 @@ from tqdm import tqdm
 
 def time_this_function(func):
     """
-    time the function.
+    Time the function.
     use as a decorator.
+
+    Examples
+    ---------
+    ::
+        @time_this_function
+
+        def func(x):
+            return x
+        a= func(1)
 
     Parameters
     ----------
@@ -86,6 +95,13 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
     """
 
     Parallelize the function for iterable.
+
+    Examples
+    ----------
+    >>> def func(x):
+    >>>     return x**2
+    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
+    [1,2,3,4,5]
 
     Note:
         For "large" calculated function, with small return for each function.
@@ -161,6 +177,13 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     Parallelize the function for iterable.
 
     The iterable would be batched into batch_size  for less resources transmission.
+
+    Examples
+    ----------
+    >>> def func(x):
+    >>>     return x**2
+    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
+    [1,2,3,4,5]
 
     Note:
     For "small" calculated function, with small return for each function.
@@ -477,6 +500,7 @@ class TTClass(_TTClass):
     >>> a=4
     >>> tt.t
     >>> tt.p
+    [['t1-t0:' ****]]
 
     """
 

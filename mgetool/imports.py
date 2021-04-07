@@ -48,6 +48,17 @@ class Call(object):
     """
     Call file in paths.
 
+    When there are four files in pwd path:
+        (file1.csv, file2.csv, file3.txt, file4.png)
+
+    Examples
+    ---------
+    >>> call = Call(".",backend="csv")
+    >>> file1 = call.file1
+    >>> file2 = call.file2
+    >>> call = Call(".",backend="txt")
+    >>> file = call.file3
+
     """
 
     @staticmethod
@@ -257,6 +268,21 @@ def check_file(spath, file_path, suffix=None):
 class BatchFile:
     """
     Search files and filter files and re-site files.
+
+    Examples
+    ---------
+    >>> a = BatchFile(".")
+    >>> a.filter_dir_name("a")
+    >>> a.filter_file_name("2")
+    >>> print(a.file_list)
+    ...
+    #copy the file to new path and keep the dir structure
+    >>> a.to_path(r"C:\Users\Admin\Desktop\d2",flatten=False)
+    #copy the file to new path, flatten the file and add the dir name on file: dirname_1_filename.
+    >>> a.to_path(r"C:\Users\Admin\Desktop\d2", add_dir=[-1], flatten=True)
+    #copy the file to new path, flatten the file and add the dir name on file: dirname_2_dirname_1_filename.
+    >>> a.to_path(r"C:\Users\Admin\Desktop\d2", add_dir=[-2,-1], flatten=True)
+
     """
 
     def __init__(self, path=None, suffix=None):

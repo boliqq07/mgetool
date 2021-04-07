@@ -51,7 +51,17 @@ from sympy.physics.quantum.circuitplot import pyplot
 
 class BasePlot(object):
     """
-    add definition to matpltlib.plt to draw better figures
+    Add definition to matpltlib.plt to draw better figures
+
+    >>> bp = BasePlot()
+    >>> plt = bp.yy_numpy(y_true, y_predict, strx='y_true', stry='y_predict')
+    >>> plt.show()
+    >>> plt = bp.line_scatter(y_scatter, y_lines, strx='x', stry='y')
+    >>> plt.show()
+    >>> plt = bp.lines(y)
+    >>> plt.show()
+    >>> plt = bp.lines(y,x)
+    >>> plt.show()
 
     """
 
@@ -258,10 +268,21 @@ def lin_cof(x0):
     return results1
 
 
-def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left=0, threshold_right=0.9,
+def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left=0.0, threshold_right=0.9,
               title="pearsonr coefficient", label_axis="off", front_raito=1):
     """
     Plot corr
+
+    Examples
+    -----------
+    >>> data = load_boston(return_X_y=False)
+    >>> name0 = data["feature_names"]
+    >>> x = data["data"]
+    >>> y = data["target"]
+    >>> x_cof = np.corrcoef(x.T)
+    >>> #plot
+    >>> plt = corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off")
+    >>> plt.show()
 
     Parameters
     ----------
@@ -273,9 +294,9 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
         type for left_down
     right_top:None,"pie","fill","text","circle"
         type for right_top
-    threshold_left:int
+    threshold_left:float
         threshold for show.
-    threshold_right:int
+    threshold_right:float
         threshold for show.
     title:str
         picture title
@@ -409,3 +430,4 @@ if __name__ == '__main__':
 
     corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off",
               front_raito=0.6)
+    plt.show()

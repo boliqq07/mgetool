@@ -9,7 +9,7 @@
 
 """
 Notes:
-    export data simply.
+    Export data simply.
 
 """
 
@@ -44,9 +44,15 @@ class Store(object):
     Store file to path.
 
     Default mode is "w" ,which can be "a+" in txt.
-    'w'       create a new file, open for writing, clear contents if it exists.
-    'a+'      open for writing, appending to the end of the file if it exists.
-    'n'       create a new file and open it for writing, the name are set by number.
+
+    'w' :
+        create a new file, open for writing, clear contents if it exists.
+
+    'a+':
+        open for writing, appending to the end of the file if it exists.
+
+    'n':
+        create a new file and open it for writing, the name are set by number.
 
     Example1:
     ----------
@@ -60,6 +66,8 @@ class Store(object):
 
     Example2:
     ----------
+    Catch the printed to txt.
+
     >>> from mgetool.exports import Store
     >>> st =  Store()
     >>> st.start()
@@ -69,6 +77,29 @@ class Store(object):
     >>>     print("this is the %d times" % i)
 
     >>> st.end()
+
+
+    Example2:
+    ----------
+    Catch the printed to txt.
+
+    >>> from mgetool.exports import Store
+    >>> st =  Store()
+    >>> a = ["data1","data2"]
+    >>> b = ["data1","data2"]
+    >>> st.to_csv(a)
+    >>> st.to_txt(b)
+    >>> st.to_pkl_pd(b)
+    >>> st.remove(-1) #delete the last file in disk.
+    >>> st.withdraw() #delete all the file in disk.
+    ...
+
+    See Also:
+        ``Store.to_csv``
+
+        ``Store.to_txt``
+
+        ``Store.to_pkl_pd``
 
     """
 
@@ -308,7 +339,7 @@ class Store(object):
 
     def start(self, file_new_name="print_log", mode="w"):
         """
-        only for single processing.
+        Only for single processing.
 
         Parameters
         ----------
