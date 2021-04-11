@@ -266,7 +266,7 @@ def check_file(spath, file_path, suffix=None):
 
 
 class BatchFile:
-    """
+    r"""
     Search files and filter files and re-site files.
 
     Examples
