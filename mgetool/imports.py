@@ -479,15 +479,14 @@ class BatchFile:
                 os.makedirs(path_i)
             shutil.copy(i, j)
 
-
 # if __name__ == "__main__":
-    # others please use shutil
-    # shutil.copytree()
-    # a = BatchFile(r"C:\Users\wangchangxin\Desktop\d1")
-    # a.filter_dir_name("a", layer=-1)
-    # a.filter_file_name("2")
-    # a.to_path(r"C:\Users\wangchangxin\Desktop\d2", add_dir=[-2, -1], flatten=True)
-    # bf = BatchFile(r"/home/iap13/wcx/CHG")
+# others please use shutil
+# shutil.copytree()
+# a = BatchFile(r"C:\Users\wangchangxin\Desktop\d1")
+# a.filter_dir_name("a", layer=-1)
+# a.filter_file_name("2")
+# a.to_path(r"C:\Users\wangchangxin\Desktop\d2", add_dir=[-2, -1], flatten=True)
+# bf = BatchFile(r"/home/iap13/wcx/CHG")
 
-    # bf.filter_dir_name(includ="Mo")
-    # filenames = bf.file_list
+# bf.filter_dir_name(includ="Mo")
+# filenames = bf.file_list

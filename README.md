@@ -1,4 +1,5 @@
 # MGE tool
+
 Some useful base tools for other mge packages, but without specific task.
 
 [![Python Versions](https://img.shields.io/pypi/pyversions/mgetool.svg)](https://pypi.org/project/mgetool/)
@@ -6,6 +7,7 @@ Some useful base tools for other mge packages, but without specific task.
 ![pypi Versions](https://badge.fury.io/py/mgetool.svg)
 
 # Install
+
 ```bash
 pip install mgetool
 ```
@@ -37,6 +39,7 @@ Draw correlation coefficient graph.(相关系数图)
 tool
 ----------------------
 **tt**
+
 ```python
 from mgetool.tool import tt
 tt.t
@@ -44,6 +47,7 @@ tt.t
 tt.t
 tt.p
 ```
+
 Record the time of this site, and print uniformly.(测试代码块时间)
 
 **time_this_function**
@@ -73,10 +77,12 @@ Foo = create("Foo", np.ndarray, lenn=dict, spam=1, fu=ff)
 foo = Foo([1, 2, 3])
 a = foo.fu(2, 4)
 ```
+
 Build a simple class quickly.(No initialization parameters)（快速创建新类）
 
 packbox
 ----------------------
+
 ```python
 from mgetool.packbox import Toolbox
 
@@ -91,4 +97,20 @@ to.register("a", func, 1, 5, abss=3)
 to.refresh("a", 3, 4, 6, name=3, abss=4)
 to.a()
 ```
+
 Build a toolbox and you can add function to it.(函数集合)
+
+draft
+----------------------
+
+```python
+from mgetool.draft import DraftPyx
+
+bd = DraftPyx("hello.pyx")
+bd.write()
+a= bd.quick_import(build=True, with_html=True)
+# bd.remove()
+```
+
+Build for .cpp or .pyx temporary .(编译cython和cpp ，自动创建setup.py)
+

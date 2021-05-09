@@ -12,7 +12,9 @@ Notes:
 """
 import inspect
 import numbers
+import os
 import random
+import re
 import time
 from collections.abc import Iterable
 from functools import partial, wraps
@@ -22,8 +24,9 @@ from sys import getsizeof
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
-from mgetool.exports import Store
 from tqdm import tqdm
+
+from mgetool.exports import Store
 
 
 def time_this_function(func):
@@ -308,7 +311,7 @@ def parallelize_parameter(func, iterable, respective=False, **kwargs):
 
     for batch_sizei in batch_size:
         t3 = time.time()
-        result = parallelize(n_jobs, func, iterable2, respective, batch_size=batch_sizei, **kwargs)
+        parallelize(n_jobs, func, iterable2, respective, batch_size=batch_sizei, **kwargs)
         t4 = time.time()
         t34 = t4 - t3
         size2 = size * batch_sizei
@@ -521,6 +524,38 @@ class TTClass(_TTClass):
             return _TTClass.__getattribute__(self, item)
 
 
+def def_pwd(path=None):
+    """try of get and define work path."""
+    if path is None:
+        path = os.getcwd()
+
+    if os.path.exists(path):
+        os.chdir(path)
+    else:
+        os.makedirs(path)
+        os.chdir(path)
+    pwd = os.getcwd()
+    locals()[pwd] = pwd
+    return pwd
+
+
+def get_name_without_suffix(module_name):
+    """Get the name without suffix."""
+    if "-" in module_name:
+        print("'-' in '{}' is replaced by '_'".format(module_name))
+    module_name = module_name.replace("-", "_")
+
+    module_fc = re.compile(r"\W")
+    module_fc = module_fc.findall(module_name)
+    if module_fc[0] == "." and len(module_fc) == 1:
+        module_name = module_name.split(".")[0]
+    else:
+        module_fc.remove(".")
+        raise NameError("The string {} in module_name is special character.".format(module_fc))
+    print("Confirm the model name: {}".format(module_name))
+    return module_name
+
+
 tt = TTClass()
 
 if __name__ == "__main__":
@@ -542,12 +577,13 @@ if __name__ == "__main__":
     s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
 
     tt.t
-    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,mode="m")
+    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, mode="m")
     tt.t
-    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000,mode="m")
+    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
     tt.t
-    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False,mode="m")
+    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False,
+                          mode="m")
     tt.t
-    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False,mode="m")
+    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False, mode="m")
     tt.t
     tt.p

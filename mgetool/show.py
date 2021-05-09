@@ -411,7 +411,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
 
     @pyplot.FuncFormatter
     def fake_(x, pos):
-        return round(2*(x-0.5), 1)
+        return round(2 * (x - 0.5), 1)
 
     fig.subplots_adjust(right=0.75)
     cbar_ax = fig.add_axes([0.80, 0.125, 0.03, 0.75])

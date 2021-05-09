@@ -17,13 +17,13 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='mgetool',
-    version='0.0.13',
-    keywords=["exports", "imports", "show", "tool", "newclass", "packbox"],
+    version='0.0.14',
+    keywords=["exports", "imports", "show", "tool", "newclass", "packbox", "draft"],
     description='This is an tool box contains tools for mgedata.'
                 'Some of code are non-originality, just copy for use. All the referenced code are marked,'
                 'details can be shown in their sources',
     install_requires=['pandas', 'numpy', 'sympy', 'scipy', 'scikit-learn', 'joblib', 'matplotlib',
-                      'seaborn', 'requests', 'tqdm', 'six', 'scikit-image'],
+                      'seaborn', 'requests', 'tqdm', 'six'],
     include_package_data=True,
     author='wangchangxin',
     author_email='986798607@qq.com',
@@ -43,10 +43,11 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
 
     packages=find_packages(
-        exclude=["*.tests", "*.tests.*", "tests.*", "tests", "test"], ),
+        exclude=["*.tests", "*.tests.*", "tests.*", "tests", "test", "instance", "Instance"], ),
     long_description=long_description,
     long_description_content_type='text/markdown'
 )
