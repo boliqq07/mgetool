@@ -535,6 +535,7 @@ def def_pwd(path=None):
         os.makedirs(path)
         os.chdir(path)
     pwd = os.getcwd()
+    print("Change work path to :", pwd)
     locals()[pwd] = pwd
     return pwd
 

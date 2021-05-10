@@ -29,19 +29,7 @@ import pandas as pd
 import requests
 from skimage import io
 
-
-def def_pwd(path):
-    if path is None:
-        path = os.getcwd()
-
-    if os.path.exists(path):
-        os.chdir(path)
-    else:
-        os.makedirs(path)
-        os.chdir(path)
-    pwd = os.getcwd()
-    locals()[pwd] = pwd
-    return pwd
+from mgetool.tool import def_pwd
 
 
 class Call(object):

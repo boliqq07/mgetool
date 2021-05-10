@@ -23,20 +23,7 @@ import pandas as pd
 from skimage import io
 from tqdm import tqdm
 
-
-def def_pwd(path):
-    """check path, if not exists, make it"""
-    if path is None:
-        path = os.getcwd()
-
-    if os.path.exists(path):
-        os.chdir(path)
-    else:
-        os.makedirs(path)
-        os.chdir(path)
-    pwd = os.getcwd()
-    locals()[pwd] = pwd
-    return pwd
+from mgetool.tool import def_pwd
 
 
 class Store(object):
