@@ -137,7 +137,10 @@ class Store(object):
 
         self._filename = file_new_name or self.default_filename
 
-        if os.path.isfile('{}{}.{}'.format(self._prefix, self._filename, suffix)) and mode == "n":
+        if "." + suffix in self._filename:
+            self._filename.removesuffix("." + suffix)
+
+        if os.path.isfile('{}{}'.format(self._prefix, self._filename, suffix)) and mode == "n":
             shu1 = 1
             while os.path.isfile('{}{}({}).{}'.format(self._prefix, self._filename, shu1, suffix)):
                 shu1 += 1

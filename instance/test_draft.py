@@ -43,3 +43,5 @@ bd = TorchJitInLine(source=source)
 bd.write(functions=["d_sigmoid", ])
 a = bd.quick_import(build=False)
 # bd.remove()
+
+from featurebox.featurizers import *
