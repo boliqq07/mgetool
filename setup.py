@@ -17,7 +17,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='mgetool',
-    version='0.0.19',
+    version='0.0.20',
     keywords=["exports", "imports", "show", "tool", "newclass", "packbox", "draft"],
     description='This is an tool box contains tools for mgedata.'
                 'Some of code are non-originality, just copy for use. All the referenced code are marked,'

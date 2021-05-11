@@ -353,26 +353,29 @@ class BatchFile:
         file_list_filter = []
 
         for file_i in self.file_list:
-            if isinstance(layer, int):
-                layer = [layer, ]
+            try:
+                if isinstance(layer, int):
+                    layer = [layer, ]
 
-            if isinstance(layer, list):
-                name = [file_i[0][i] for i in layer]
-            else:
-                name = file_i[0]
-            name = "".join(name)
+                if isinstance(layer, list):
+                    name = [file_i[0][i] for i in layer]
+                else:
+                    name = file_i[0]
+                name = "".join(name)
 
-            if include and not exclude:
-                if include in name:
-                    file_list_filter.append(file_i)
-            elif not include and exclude:
-                if exclude not in name:
-                    file_list_filter.append(file_i)
-            elif include and exclude:
-                if include in name and exclude not in name:
-                    file_list_filter.append(file_i)
-            else:
-                raise TypeError("one of include, exclude must be str")
+                if include and not exclude:
+                    if include in name:
+                        file_list_filter.append(file_i)
+                elif not include and exclude:
+                    if exclude not in name:
+                        file_list_filter.append(file_i)
+                elif include and exclude:
+                    if include in name and exclude not in name:
+                        file_list_filter.append(file_i)
+                else:
+                    raise TypeError("one of include, exclude must be str")
+            except IndexError:
+                pass
 
         self.file_list = file_list_filter
 
