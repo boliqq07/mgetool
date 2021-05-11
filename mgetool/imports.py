@@ -324,20 +324,20 @@ class BatchFile:
                 if include in name and exclude not in name:
                     file_list_filter.append(file_i)
             else:
-                raise TypeError("one of includ, exclud must be str")
+                raise TypeError("one of include, exclude must be str")
 
         self.file_list = file_list_filter
 
-    def filter_dir_name(self, includ=None, exclud=None, layer=-1):
+    def filter_dir_name(self, include=None, exclude=None, layer=-1):
         """
         Filter the dir(and its sub_file).
 
         Parameters
         ----------
-        includ:str
+        include:str
             get the filename with include str
             such as hold "ast_tep" with "ast" string
-        exclud: str
+        exclude: str
             delete the filename with exclude str
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
         layer:int,list
@@ -362,22 +362,23 @@ class BatchFile:
                 name = file_i[0]
             name = "".join(name)
 
-            if includ and not exclud:
-                if includ in name:
+            if include and not exclude:
+                if include in name:
                     file_list_filter.append(file_i)
-            elif not includ and exclud:
-                if exclud not in name:
+            elif not include and exclude:
+                if exclude not in name:
                     file_list_filter.append(file_i)
-            elif includ and exclud:
-                if includ in name and exclud not in name:
+            elif include and exclude:
+                if include in name and exclude not in name:
                     file_list_filter.append(file_i)
             else:
-                raise TypeError("one of includ, exclud must be str")
+                raise TypeError("one of include, exclude must be str")
 
         self.file_list = file_list_filter
 
     def merge(self, path=None, flatten=False, add_dir="3-layer"):
         """
+        Merge dir and file name together.
 
         Parameters
         ----------
@@ -476,5 +477,5 @@ class BatchFile:
 # a.to_path(r"C:\Users\wangchangxin\Desktop\d2", add_dir=[-2, -1], flatten=True)
 # bf = BatchFile(r"/home/iap13/wcx/CHG")
 
-# bf.filter_dir_name(includ="Mo")
+# bf.filter_dir_name(include="Mo")
 # filenames = bf.file_list

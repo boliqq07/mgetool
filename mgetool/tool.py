@@ -524,20 +524,23 @@ class TTClass(_TTClass):
             return _TTClass.__getattribute__(self, item)
 
 
-def def_pwd(path=None):
+def def_pwd(path=None, change=True):
     """try of get and define work path."""
     if path is None:
         path = os.getcwd()
 
     if os.path.exists(path):
-        os.chdir(path)
+        if change:
+            os.chdir(path)
     else:
         os.makedirs(path)
-        os.chdir(path)
+        if change:
+            os.chdir(path)
     pwd = os.getcwd()
-    print("Change work path to :", pwd)
+    print("work path:", pwd)
+    print("checked path:", path)
     locals()[pwd] = pwd
-    return pwd
+    return path
 
 
 def get_name_without_suffix(module_name):
