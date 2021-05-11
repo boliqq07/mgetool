@@ -341,6 +341,7 @@ class BatchFile:
             delete the filename with exclude str
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
         layer:int,list
+            if list, check the sum name of the layers.
             Filter dir with target layer,all the dir should contain the sublayer!
             Examples:
                 for /home,
