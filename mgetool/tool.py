@@ -26,8 +26,6 @@ import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
 from tqdm import tqdm
 
-from mgetool.exports import Store
-
 
 def time_this_function(func):
     """
@@ -218,7 +216,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     kwargs:
         kwargs for function
     store:bool,None
-        store or not, if store, the result would be store to disk and return nothing.
+        Not used, store or not, if store, the result would be store to disk and return nothing.
 
     Returns
     -------
@@ -234,21 +232,12 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     def func_batch_re(iterablei):
 
         c = [func(*i) for i in list(iterablei)]
-        if store:
-            stt = Store()
-            stt.to_pkl_pd(c, mode="n")
-            return []
-        else:
-            return c
+
+        return c
 
     def func_batch_nre(iterablei):
         c = [func(i) for i in list(iterablei)]
-        if store:
-            stt = Store()
-            stt.to_pkl_pd(c, mode="n")
-            return []
-        else:
-            return c
+        return c
 
     iterable = list(iterable)
     batch = len(iterable) // batch_size + 1
@@ -524,21 +513,25 @@ class TTClass(_TTClass):
             return _TTClass.__getattribute__(self, item)
 
 
-def def_pwd(path=None, change=True):
+def def_pwd(path=None, change=True,verbose=False):
     """try of get and define work path."""
     if path is None:
         path = os.getcwd()
-
+        pwd = path
     if os.path.exists(path):
+        path = os.path.abspath(path)
         if change:
             os.chdir(path)
+        pwd = os.getcwd()
     else:
         os.makedirs(path)
+        path = os.path.abspath(path)
         if change:
             os.chdir(path)
-    pwd = os.getcwd()
-    print("work path:", pwd)
-    print("checked path:", path)
+        pwd = os.getcwd()
+    if verbose:
+        print("work path:", pwd)
+        print("checked path:", path)
     locals()[pwd] = pwd
     return path
 
