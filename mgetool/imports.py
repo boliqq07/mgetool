@@ -310,21 +310,28 @@ class BatchFile:
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
 
         """
+        assert include != []
+        assert exclude != []
+        if isinstance(include, str):
+            include = [include, ]
+        if isinstance(exclude, str):
+            exclude = [exclude, ]
+
         file_list_filter = []
         for file_i in self.file_list:
             name = file_i[1]
 
             if include and not exclude:
-                if include in name:
+                if any([i in name for i in include]):
                     file_list_filter.append(file_i)
             elif not include and exclude:
-                if exclude not in name:
+                if not any([i in name for i in exclude]):
                     file_list_filter.append(file_i)
             elif include and exclude:
-                if include in name and exclude not in name:
+                if any([i in name for i in include]) and not any([i in name for i in exclude]):
                     file_list_filter.append(file_i)
             else:
-                raise TypeError("one of include, exclude must be str")
+                raise TypeError("one of include, exclude must be str or list of str")
 
         self.file_list = file_list_filter
 
@@ -334,10 +341,10 @@ class BatchFile:
 
         Parameters
         ----------
-        include:str
+        include:str,list of str
             get the filename with include str
             such as hold "ast_tep" with "ast" string
-        exclude: str
+        exclude: str, list of str
             delete the filename with exclude str
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
         layer:int,list
@@ -350,6 +357,12 @@ class BatchFile:
                 /home/ast/eag/kgg, -3
 
         """
+        assert include != []
+        assert exclude != []
+        if isinstance(include, str):
+            include = [include, ]
+        if isinstance(exclude, str):
+            exclude = [exclude, ]
 
         file_list_filter = []
 
@@ -365,16 +378,16 @@ class BatchFile:
                 name = "".join(name)
 
                 if include and not exclude:
-                    if include in name:
+                    if any([i in name for i in include]):
                         file_list_filter.append(file_i)
                 elif not include and exclude:
-                    if exclude not in name:
+                    if not any([i in name for i in exclude]):
                         file_list_filter.append(file_i)
                 elif include and exclude:
-                    if include in name and exclude not in name:
+                    if any([i in name for i in include]) and not any([i in name for i in exclude]):
                         file_list_filter.append(file_i)
                 else:
-                    raise TypeError("one of include, exclude must be str")
+                    raise TypeError("one of include, exclude must be str or list of str")
             except IndexError:
                 pass
 
