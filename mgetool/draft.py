@@ -459,10 +459,20 @@ class DraftPyx(BaseDraft):
     >>> bd.write()
     >>> a= bd.quick_import(build=True, with_html=True)
     >>> # bd.remove()
+
+    Examples
+    ---------
+    >>> from mgetool.draft import DraftPyx
+
+    >>> bd = DraftPyx("hello.pyx",language="c++")
+    >>> bd.write()
+    >>> a= bd.quick_import(build=True, with_html=True)
+    >>> # bd.remove()
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, language=None, **kwargs):
         super(DraftPyx, self).__init__(*args, **kwargs)
+        self.language = language
 
     def _text_setup(self, module_name, file):
         setup_text = """
@@ -480,7 +490,7 @@ def main():
 
     setup(
         name='{module_name}',
-        ext_modules=cythonize('{f_pyx}',include_path=include_path),)
+        ext_modules=cythonize('{f_pyx}',include_path=include_path,language='{language}'),)
 
 if __name__ == "__main__":
     main()
@@ -490,7 +500,7 @@ if __name__ == "__main__":
 # total:
 # python setup.py bdist_wheel
 
-""".format(module_name=module_name, f_pyx=file)
+""".format(module_name=module_name, f_pyx=file,language=self.language)
 
         return setup_text
 
