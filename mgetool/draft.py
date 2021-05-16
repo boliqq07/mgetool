@@ -254,7 +254,7 @@ class BaseDraft:
 
     def quick_import(self, build=False, suffix=".so", with_html=False):
         self.build = build
-        if self._suffix() == "pyx":
+        if self._suffix() != "pyx":
             with_html = False
         return quick_import(self.module_name, path=None, build=build, suffix=suffix, with_html=with_html)
 
