@@ -158,7 +158,7 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
     if mode == "m" and n_jobs != 1:
         pool = multiprocessing.Pool(processes=n_jobs)
         if tq:
-            iterable =list(iterable)
+            iterable = list(iterable)
             result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
                                                           total=len(iterable))]
             pool.close()
@@ -304,7 +304,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
 
 def parallelize_imap(n_jobs, func, iterable, tq=True):
-    '''
+    """
     Parallelize the function for iterable.
 
     For very big loop and small data.
@@ -315,7 +315,7 @@ def parallelize_imap(n_jobs, func, iterable, tq=True):
     iterable:List
     n_jobs:int
     is_tqdm:bool
-    '''
+    """
     pool = multiprocessing.Pool(processes=n_jobs)
     if tq:
         result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
