@@ -314,7 +314,7 @@ def parallelize_imap(n_jobs, func, iterable, tq=True):
     func:function
     iterable:List
     n_jobs:int
-    is_tqdm:bool
+    tq:bool
     """
     pool = multiprocessing.Pool(processes=n_jobs)
     if tq:
