@@ -11,6 +11,7 @@ Notes:
     Some tools for characterization
 """
 import inspect
+import multiprocessing
 import numbers
 import os
 import random
@@ -19,7 +20,6 @@ import time
 from collections.abc import Iterable
 from functools import partial, wraps
 from itertools import chain
-from multiprocessing import Pool
 from sys import getsizeof
 
 import numpy as np
@@ -92,7 +92,9 @@ def check_random_state(seed):
                      ' instance' % seed)
 
 
-def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j", **kwargs):
+def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j",
+                parallel_para_dict=None,
+                **kwargs):
     """
 
     Parallelize the function for iterable.
@@ -118,6 +120,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
     Parameters
     ----------
+    parallel_para_dict:dict
+        Parameters passed to joblib.Parallel
     batch_size:str,int
 
     respective:bool
@@ -136,9 +140,9 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
     store:
         Not been used.
         store or not, if store, the result would be store to disk and return nothing.
-
     mode:
         "j":"joblib" or "m":"multiprocessing"
+        m for very big data and small loop.
 
     Returns
     -------
@@ -146,18 +150,27 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         function results
 
     """
+    if parallel_para_dict is None:
+        parallel_para_dict = {}
     _ = store
     func = partial(func, **kwargs)
 
-    if mode == "m":
-        with Pool(n_jobs) as p:
-            ret = p.map(func, iterable)
-        return ret
+    if mode == "m" and n_jobs != 1:
+        pool = multiprocessing.Pool(processes=n_jobs)
+        if tq:
+            iterable =list(iterable)
+            result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
+                                                          total=len(iterable))]
+            pool.close()
+        else:
+            result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
+            pool.close()
+        return result_list_tqdm
 
     if effective_n_jobs(n_jobs) == 1:
         parallel, func = list, func
     else:
-        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
+        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
         func = delayed(func)
 
     if tq:
@@ -172,7 +185,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(iter_i) for iter_i in iterable)
 
 
-def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="j",
+def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="m",
+                      parallel_para_dict: dict = None,
                       **kwargs):
     """
     Parallelize the function for iterable.
@@ -198,8 +212,10 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
     Parameters
     ----------
+    parallel_para_dict:dict
+        Parameters passed to joblib.Parallel
     batch_size:int
-
+        For small data and very big loop.with model "m"
     respective:bool
         Import the parameters respectively or as a whole
     tq:bool
@@ -213,6 +229,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         iterable object
     mode:
         "j":"joblib" or "m":"multiprocessing"
+        m for very big data and small loop.
     kwargs:
         kwargs for function
     store:bool,None
@@ -224,32 +241,46 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         function results
 
     """
+
+    if parallel_para_dict is None:
+        parallel_para_dict = {}
+
     if effective_n_jobs(n_jobs) == 1:
-        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store, **kwargs)
+        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store, **kwargs, **parallel_para_dict)
 
     func = partial(func, **kwargs)
 
     def func_batch_re(iterablei):
 
-        c = [func(*i) for i in list(iterablei)]
-
-        return c
+        return [func(*i) for i in list(iterablei)]
 
     def func_batch_nre(iterablei):
-        c = [func(i) for i in list(iterablei)]
-        return c
+        return [func(i) for i in list(iterablei)]
 
     iterable = list(iterable)
     batch = len(iterable) // batch_size + 1
     iterables = np.array_split(iterable, batch)
 
-    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size)
+    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
 
     if mode == "m":
-        with Pool(n_jobs) as p:
-            y = p.map(func_batch_re, iterables)
+        # no tq
+        global func_batch_nree
+
+        def func_batch_nree(iterablei):
+            return [func(i) for i in list(iterablei)]
+
+        pool = multiprocessing.Pool(processes=n_jobs)
+        if tq:
+            rett = [result for result in tqdm(pool.imap(func=func_batch_nree, iterable=iterables),
+                                              total=len(iterables))]
+            pool.close()
+        else:
+            rett = [result for result in pool.imap(func=func_batch_nree, iterable=iterables)]
+            pool.close()
         ret = []
-        [ret.extend(i) for i in y]
+        [ret.extend(i) for i in rett]
+        del func_batch_nree
         return ret
 
     if respective:
@@ -270,6 +301,31 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
         raise MemoryError(
             "The total size of calculation is out of Memory, please try ’store‘ result to disk but return to window")
+
+
+def parallelize_imap(n_jobs, func, iterable, tq=True):
+    '''
+    Parallelize the function for iterable.
+
+    For very big loop and small data.
+
+    Parameters
+    ----------
+    func:function
+    iterable:List
+    n_jobs:int
+    is_tqdm:bool
+    '''
+    pool = multiprocessing.Pool(processes=n_jobs)
+    if tq:
+        result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
+                                                      total=len(iterable))]
+        pool.close()
+    else:
+        result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
+        pool.close()
+
+    return result_list_tqdm
 
 
 def parallelize_parameter(func, iterable, respective=False, **kwargs):
@@ -513,7 +569,7 @@ class TTClass(_TTClass):
             return _TTClass.__getattribute__(self, item)
 
 
-def def_pwd(path=None, change=True,verbose=False):
+def def_pwd(path=None, change=True, verbose=False):
     """try of get and define work path."""
     if path is None:
         path = os.getcwd()
@@ -574,7 +630,7 @@ if __name__ == "__main__":
     s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
 
     tt.t
-    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, mode="m")
+    s = parallelize(1, func, list(zip(iterable, iterable)), respective=True, tq=True, batch_size=1000, mode="m")
     tt.t
     s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
     tt.t
