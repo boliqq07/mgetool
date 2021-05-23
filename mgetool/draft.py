@@ -69,16 +69,25 @@ class BaseDraft:
         only_file:bool
             just copy the source file to temps.
         """
+        self.init_path = os.getcwd()
         # check file
+        if path:
+            assert r"/" not in file, "Path must in one of `path` parameter or the `filename`."
+            assert r"\\" not in file,  "Path must in one of `path` parameter or the `filename`."
+        else:
+            if "/" in file or "\\" in file:
+                path = Path(file).parent
+                file = os.path.split(file)[-1]
+
         self.file = file
         self.check_suffix(self.file)
 
         if path is not None:
-            def_pwd(path)
+            def_pwd(path, change=False)
         if os.path.isfile(file):
             pass
         else:
-            raise IOError("No file named {} in {}".format(file, os.getcwd()))
+            raise IOError("No file named {} in {}, please re-site your path".format(file, os.getcwd()))
 
         MODULE_DIR = Path().absolute()
         # temps:
@@ -107,16 +116,14 @@ class BaseDraft:
                     else:
                         shutil.copy(i, temps)
 
-            os.chdir(temps)
             self.temps = temps
             self.path = MODULE_DIR / temps
-            print("Work path move to: {}".format(os.getcwd()))
 
         else:
             self.temps = None
             self.path = MODULE_DIR
         # check module_name
-        module_name = get_name_without_suffix(self.file)
+        module_name = get_name_without_suffix(os.path.split(self.file)[-1])
         self.module_name = module_name
         self.build = True
 
@@ -149,7 +156,7 @@ class BaseDraft:
             functions=["fcc", "bcc", "cubic"]. Method of module, keep same with cpp functions.
 
         """
-
+        os.chdir(self.path)
         # setup.py
         try:
             setup = self.text_setup(self.module_name, self.file)
@@ -226,6 +233,10 @@ class BaseDraft:
         except NotImplementedError:
             pass
 
+        os.chdir(self.init_path)
+
+        # end
+
     @abstractmethod
     def _text_head(self, *args, **kwargs):
         """
@@ -253,12 +264,17 @@ class BaseDraft:
         return self._text_setup(*args, **kwargs)
 
     def quick_import(self, build=False, suffix=".so", with_html=False):
+        os.chdir(self.path)
         self.build = build
         if self._suffix() != "pyx":
             with_html = False
-        return quick_import(self.module_name, path=None, build=build, suffix=suffix, with_html=with_html)
+        mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix, with_html=with_html)
+        os.chdir(self.init_path)
+        print("Move back to {}".format(self.init_path))
+        return mod
 
     def remove(self, numbers=None):
+        os.chdir(self.path)
         """remove files, beyond retrieve, carefully use!!!"""
         if self.temps is None and numbers is None:
             warnings.warn("Difficult to determine which file to delete. please pass the numbers, such as [0,1,2],"
@@ -285,6 +301,8 @@ class BaseDraft:
         else:
             shutil.rmtree(self.path)
             print("Delete end")
+
+        os.chdir(self.init_path)
 
 
 class DraftPybind11(BaseDraft):
@@ -713,6 +731,7 @@ m.doc() = "{doc}"; // optional module docstring
         return PYBIND11_MODULE
 
     def quick_import(self, build=False, suffix=".so", with_html=False):
+        os.chdir(self.path)
         self.build = build
         from torch.utils import cpp_extension
 
@@ -727,6 +746,8 @@ m.doc() = "{doc}"; // optional module docstring
 
         mod = quick_import(self.module_name, path=None, build=build, suffix=suffix,
                            re_build_func=re_build_func_torch, re_build_func_kwargs={})
+        os.chdir(self.init_path)
+        print("Move back to {}".format(self.init_path))
         return mod
 
 
@@ -757,7 +778,8 @@ class TorchJitInLine:
 
     """
 
-    def __init__(self, source, module_name="TORCH_EXTENSION_NAME", path=None, temps="temps", warm_start=False):
+    def __init__(self, source, module_name="TORCH_EXTENSION_NAME", path=None, temps="temps", warm_start=False
+                 ):
         """
         Add one temps dir and copy all the file to this disk to escape pollution.
 
@@ -774,13 +796,14 @@ class TorchJitInLine:
         warm_start:bool
             start from exist file.
         """
+        self.init_path = os.getcwd()
         # check file
         if module_name == "TORCH_EXTENSION_NAME":
             print("please re set your module name")
         self.source = source
 
         if path is not None:
-            def_pwd(path)
+            def_pwd(path, change=False)
 
         MODULE_DIR = Path().absolute()
         # temps:
@@ -796,10 +819,8 @@ class TorchJitInLine:
                     warnings.warn("There is exist {temps}. Duplicate files will be overwritten."
                                   "please use remove() to delete temporary file after each test.".format(temps=temps))
 
-            os.chdir(temps)
             self.temps = temps
             self.path = MODULE_DIR / temps
-            print("Work path move to: {}".format(os.getcwd()))
 
         else:
             self.temps = None
@@ -815,6 +836,7 @@ class TorchJitInLine:
             print("function names must be set")
 
     def quick_import(self, build=False, suffix=".so"):
+        os.chdir(self.path)
         self.build = build
         from torch.utils import cpp_extension
 
@@ -828,12 +850,15 @@ class TorchJitInLine:
                 is_python_module=True, )
             return mod
 
-        mod = quick_import(self.module_name, path=None, build=build, suffix=suffix,
+        mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix,
                            re_build_func=re_build_func_torch, re_build_func_kwargs={})
+        os.chdir(self.init_path)
+        print("Move back to {}".format(self.init_path))
         return mod
 
     def remove(self, numbers=None):
         """remove files, beyond retrieve, carefully use!!!"""
+        os.chdir(self.path)
         if self.temps is None and numbers is None:
             warnings.warn("Difficult to determine which file to delete. please pass the numbers, such as [0,1,2],"
                           "Please confirm the serial number")
@@ -860,3 +885,4 @@ class TorchJitInLine:
         else:
             shutil.rmtree(self.path)
             print("Delete end")
+        os.chdir(self.init_path)
