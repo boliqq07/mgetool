@@ -83,7 +83,7 @@ class BaseDraft:
         self.check_suffix(self.file)
 
         if path is not None:
-            def_pwd(path, change=False)
+            def_pwd(path)
         if os.path.isfile(file):
             pass
         else:
@@ -126,6 +126,7 @@ class BaseDraft:
         module_name = get_name_without_suffix(os.path.split(self.file)[-1])
         self.module_name = module_name
         self.build = True
+        os.chdir(self.init_path)
 
     @abstractmethod
     def _suffix(self):
@@ -803,7 +804,7 @@ class TorchJitInLine:
         self.source = source
 
         if path is not None:
-            def_pwd(path, change=False)
+            def_pwd(path)
 
         MODULE_DIR = Path().absolute()
         # temps:
@@ -829,6 +830,7 @@ class TorchJitInLine:
         self.module_name = module_name
         self.build = True
         self.functions = []
+        os.chdir(self.init_path)
 
     def write(self, functions: list):
         self.functions = functions
