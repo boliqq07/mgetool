@@ -451,6 +451,7 @@ class BatchFile:
                 site.append(file_i[1])
                 file_list_merge.append(os.path.join(path, *site))
 
+        self.file_list_merge = file_list_merge
         return file_list_merge
 
     def to_path(self, new_path, flatten=True, add_dir="3-layer"):
