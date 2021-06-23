@@ -93,7 +93,7 @@ def check_random_state(seed):
 
 
 def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j",
-                parallel_para_dict=None,
+                parallel_para_dict=None, respective_kwargs=False,
                 **kwargs):
     """
 
@@ -125,7 +125,12 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
     batch_size:str,int
 
     respective:bool
-        Import the parameters respectively or as a whole
+        Import the parameters respectively or as a whole for each one of iterable object.
+    respective_kwargs:
+        the respective parameters contains kwargs or not. only for mode=="j" and respective=True
+        >>> for iter_i, kw in tqdm(iterable)):
+        >>>    func(*iter_i,**kw)
+
     tq:bool
          View Progress or not
     n_jobs:int
@@ -150,6 +155,9 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         function results
 
     """
+    if respective_kwargs:
+        assert mode == "j" and respective is True
+
     if parallel_para_dict is None:
         parallel_para_dict = {}
     _ = store
@@ -175,18 +183,26 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
     if tq:
         if respective:
-            return parallel(func(*iter_i) for iter_i in tqdm(iterable))
+            if respective_kwargs:
+                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw) for iter_i, kw in tqdm(iterable))
+                return parallel(func(*iter_i, **kw) for *iter_i, kw in tqdm(iterable))
+            else:
+                return parallel(func(*iter_i) for iter_i in tqdm(iterable))
         else:
             return parallel(func(iter_i) for iter_i in tqdm(iterable))
     else:
         if respective:
-            return parallel(func(*iter_i) for iter_i in iterable)
+            if respective_kwargs:
+                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw)  for iter_i, kw in iterable)
+                return parallel(func(*iter_i, **kw) for *iter_i, kw in iterable)
+            else:
+                return parallel(func(*iter_i) for iter_i in iterable)
         else:
             return parallel(func(iter_i) for iter_i in iterable)
 
 
 def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="m",
-                      parallel_para_dict: dict = None,
+                      parallel_para_dict: dict = None, respective_kwargs=False,
                       **kwargs):
     """
     Parallelize the function for iterable.
@@ -198,6 +214,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     >>> def func(x):
     >>>     return x**2
     >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
+
     [1,2,3,4,5]
 
     Note:
@@ -212,6 +229,13 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
     Parameters
     ----------
+
+    respective_kwargs:
+        the respective parameters contains kwargs or not. only for mode=="j" and respective=True.
+        the first iterable i is tuple and second kw is dict.
+        >>> for iter_i, kw in tqdm(iterable)):
+        >>>    func(*iter_i,**kw)
+
     parallel_para_dict:dict
         Parameters passed to joblib.Parallel
     batch_size:int
@@ -241,18 +265,25 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         function results
 
     """
+    if respective_kwargs:
+        assert mode == "j" and respective is True
 
     if parallel_para_dict is None:
         parallel_para_dict = {}
 
     if effective_n_jobs(n_jobs) == 1:
-        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store, **kwargs, **parallel_para_dict)
+        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store,
+                           respective_kwargs=respective_kwargs,
+                           **kwargs, **parallel_para_dict)
 
     func = partial(func, **kwargs)
 
     def func_batch_re(iterablei):
+        if respective_kwargs:
 
-        return [func(*i) for i in list(iterablei)]
+            return [func(*i, **kw) for *i, kw in list(iterablei)]
+        else:
+            return [func(*i) for i in list(iterablei)]
 
     def func_batch_nre(iterablei):
         return [func(i) for i in list(iterablei)]
@@ -612,31 +643,54 @@ def get_name_without_suffix(module_name):
 tt = TTClass()
 
 if __name__ == "__main__":
-    def func(n, _=None):
+    # def func(n, _=None):
+    #     # time.sleep(0.0001)
+    #     s = np.random.random((100, 50))
+    #     return s
+    #
+    #
+    # iterable = np.arange(10000)
+    # iterable2 = np.arange(20000)
+    # tt.t
+    # s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
+    # tt.t
+    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
+    # tt.t
+    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, )
+    # tt.t
+    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, )
+    #
+    # tt.t
+    # s = parallelize(1, func, list(zip(iterable, iterable)), respective=True, tq=True, batch_size=1000, mode="m")
+    # tt.t
+    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
+    # tt.t
+    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,
+    #                       mode="m")
+    # tt.t
+    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
+    # tt.t
+    # tt.p
+
+    def func2(n, j, dc=None, dp=None):
         # time.sleep(0.0001)
+        assert isinstance(dc, np.int64)
+        assert isinstance(dp, np.int64)
         s = np.random.random((100, 50))
         return s
 
 
     iterable = np.arange(10000)
-    iterable2 = np.arange(20000)
+    kw = [{"dc": iterable[i], "dp": iterable[i]} for i in range(len(iterable))]
+    iterables = zip(iterable, iterable, kw)
+    # iterables = zip(iterable,kw)
     tt.t
-    s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
+    s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True)
     tt.t
-    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
-    tt.t
-    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False)
-    tt.t
-    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False)
+    tt.p
 
     tt.t
-    s = parallelize(1, func, list(zip(iterable, iterable)), respective=True, tq=True, batch_size=1000, mode="m")
-    tt.t
-    s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-    tt.t
-    s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, store=False,
-                          mode="m")
-    tt.t
-    s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, store=False, mode="m")
+    s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",
+                          respective_kwargs=True)
     tt.t
     tt.p
