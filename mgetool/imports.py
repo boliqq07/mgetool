@@ -28,8 +28,9 @@ import joblib
 import pandas as pd
 import requests
 from skimage import io
+from tqdm import tqdm
 
-from mgetool.tool import def_pwd
+from mgetool.tool import def_pwd, parallelize
 
 
 class Call(object):
@@ -393,7 +394,7 @@ class BatchFile:
 
         self.file_list = file_list_filter
 
-    def merge(self, path=None, flatten=False, add_dir="3-layer"):
+    def merge(self, path=None, flatten=False, add_dir="3-layer", refresh_file_list=True, pop=0):
         """
         Merge dir and file name together.
 
@@ -409,9 +410,19 @@ class BatchFile:
         add_dir:int,list
             add the top dir_name to file to escape same name file.
             only valid for flatten=True
+        refresh_file_list:bool
+            refresh file_list or not.
+        pop: int (negative)
+            pop the last n layer. default =0
+            used for copy by dir rather than files. just used for flatten=False
+
         Returns
         -------
             new filename
+
+            Args:
+                refresh_file_list:
+                refresh_file_list:
         """
         if not path:
             path = self.path
@@ -422,6 +433,10 @@ class BatchFile:
             add_dir = [-1, -2, -3]
         if isinstance(add_dir, int):
             add_dir = [add_dir, ]
+
+        if flatten is not False:
+            assert pop == 0
+        assert pop <= 0
 
         file_list_merge = []
         for file_i in self.file_list:
@@ -448,13 +463,20 @@ class BatchFile:
                 site = "_".join(site)
                 file_list_merge.append(os.path.join(path, site))
             else:
-                site.append(file_i[1])
-                file_list_merge.append(os.path.join(path, *site))
 
-        self.file_list_merge = file_list_merge
+                site.append(file_i[1])
+                if pop != 0:
+                    site = site[:pop]
+                namei = os.path.join(path, *site)
+
+                if len(file_list_merge) == 0 or namei != file_list_merge[-1]:
+                    file_list_merge.append(namei)
+
+        if refresh_file_list:
+            self.file_list_merge = file_list_merge
         return file_list_merge
 
-    def to_path(self, new_path, flatten=True, add_dir="3-layer"):
+    def to_path(self, new_path, flatten=False, add_dir="3-layer", pop=0, n_jobs=1):
         """
 
         Parameters
@@ -469,18 +491,37 @@ class BatchFile:
         add_dir:list, int
             add the top dir_name to file to escape same name file.
             only valid for flatten=True
+        pop: int (negative)
+            pop the last n layer. default =0
+            used for copy by dir rather than files. just used for flatten=False
+        n_jobs:int
+            n_jobs
+
         Returns
         -------
-            file in path
+            file in path.
         """
-        self.file_list_merge = self.merge()
+        self.file_list_merge = self.merge(pop=pop)
         new_path = def_pwd(new_path)
-        self.file_list_merge_new = self.merge(path=new_path, flatten=flatten, add_dir=add_dir)
+        self.file_list_merge_new = self.merge(path=new_path, flatten=flatten, add_dir=add_dir,
+                                              refresh_file_list=False, pop=pop)
         if len(set(self.file_list_merge_new)) < len(set(self.file_list_merge)):
-            raise UserWarning("there are same name files after flatten folders. "
-                              "please change add_dir to add difference prefix to files", )
-        # parallelize(-1, shutil.copy, zip(self.file_list_merge, self.file_list_merge_new), respective=True)
-        for i, j in zip(self.file_list_merge, self.file_list_merge_new):
+            raise UserWarning("There are same name files after flatten folders. "
+                              "you can change add_dir to add difference prefix to files", )
+        if n_jobs != 1:
+            parallelize(n_jobs, self.copy_user, zip(self.file_list_merge, self.file_list_merge_new,),
+                              mode="j",
+                              respective=False)
+        else:
+            for ij in tqdm(list(zip(self.file_list_merge, self.file_list_merge_new))):
+                self.copy_user(ij)
+
+    @staticmethod
+    def copy_user(k):
+        i, j = k
+        if os.path.isdir(i):
+            shutil.copytree(i, j)
+        else:
             path_i = os.path.split(j)[0]
             if not os.path.exists(path_i):
                 os.makedirs(path_i)
