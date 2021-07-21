@@ -201,10 +201,6 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             return parallel(func(iter_i) for iter_i in iterable)
 
 
-def func_batch_nree(iterablei,func):
-    return [func(i) for i in list(iterablei)]
-
-
 def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="m",
                       parallel_para_dict: dict = None, respective_kwargs=False,
                       **kwargs):
@@ -292,25 +288,24 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         return [func(i) for i in list(iterablei)]
 
     iterable = list(iterable)
-    batch = len(iterable) // batch_size + 1
-    iterables = np.array_split(iterable, batch)
-
-    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
 
     if mode == "m":
         # no tq
 
         pool = multiprocessing.Pool(processes=n_jobs)
         if tq:
-            rett = [result for result in tqdm(pool.imap(func=func, iterable=iterables, chunksize=batch_size),
-                                              total=len(iterables))]
+            rett = [result for result in tqdm(pool.imap(func=func, iterable=iterable, chunksize=batch_size),
+                                              total=len(iterable))]
             pool.close()
         else:
-            rett = [result for result in pool.imap(func=func, iterable=iterables, chunksize=batch_size)]
+            rett = [result for result in pool.imap(func=func, iterable=iterable, chunksize=batch_size)]
             pool.close()
-        ret = []
-        [ret.extend(i) for i in rett]
-        return ret
+        return rett
+
+    batch = len(iterable) // batch_size + 1
+    iterables = np.array_split(iterable, batch)
+
+    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
 
     if respective:
         func_batch = delayed(func_batch_re)
