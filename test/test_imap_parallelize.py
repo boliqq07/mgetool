@@ -1,11 +1,14 @@
 from mgetool.tool import parallelize, tt, parallelize_imap, batch_parallelize
 import numpy as np
 
+
+def func(n, _=None):
+    # time.sleep(0.0001)
+    s = np.random.random((10, 50))
+    return s
+
 if __name__ == "__main__":
-    def func(n, _=None):
-        # time.sleep(0.0001)
-        s = np.random.random((10, 50))
-        return s
+
     iterable = np.arange(50)
     s0 = batch_parallelize(4, func, iterable, respective=False, tq=True, mode="m") #无tq
     s1 = parallelize(4, func, iterable, respective=False, tq=True,  mode="j")
