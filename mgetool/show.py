@@ -340,7 +340,7 @@ def corr_plot(x_cof, x_name=None, left_down=None, right_top=None, threshold_left
 
         if types == "pie":
             ax = plt.subplot(gs[i, j])
-            ax.pie((size[i, j], or_size[i, j]), explode=explode, labels=None, autopct=None, shadow=False,
+            ax.pie((abs(size[i, j]), abs(or_size[i, j])), explode=explode, labels=None, autopct=None, shadow=False,
                    startangle=90,
                    colors=[fill_colors[i, j], 'w'], wedgeprops=dict(width=1, edgecolor='black', linewidth=0.5),
                    counterclock=False,
@@ -428,6 +428,6 @@ if __name__ == '__main__':
     y = data["target"]
     x_cof = np.corrcoef(x.T)
 
-    corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off",
+    plt = corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off",
               front_raito=0.6)
     plt.show()
