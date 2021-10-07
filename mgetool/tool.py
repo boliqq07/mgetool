@@ -1,689 +1,439 @@
-#!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 
-# @Time   : 2019/7/29 19:44
-# @Author : Administrator
+# @Time    : 2020/10/19 13:32
+# @Email   : 986798607@qq.com
 # @Software: PyCharm
 # @License: BSD 3-Clause
 
-"""
-Notes:
-    Some tools for characterization
-"""
-import inspect
+import copy
+import functools
 import multiprocessing
-import numbers
-import os
-import random
-import re
-import time
-from collections.abc import Iterable
-from functools import partial, wraps
-from itertools import chain
-from sys import getsizeof
+import warnings
+from collections.abc import Callable
 
 import numpy as np
-from joblib import Parallel, delayed, effective_n_jobs
-from tqdm import tqdm
+import pandas as pd
+import sympy
+from mgetool.tool import parallelize
+from scipy.optimize import least_squares
+from sklearn import metrics
+from sympy import Expr
+
+warnings.filterwarnings("ignore")
+
+score_collection = {'explained_variance': metrics.explained_variance_score,
+                    'max_error': metrics.max_error,
+                    'neg_mean_absolute_error': metrics.mean_absolute_error,
+                    'neg_mean_squared_error': metrics.mean_squared_error,
+                    'neg_root_mean_squared_error': metrics.mean_squared_error,
+                    'r2': metrics.r2_score,
+                    'accuracy': metrics.accuracy_score,
+                    'precision': metrics.precision_score,
+                    'f1': metrics.f1_score,
+                    'balanced_accuracy': metrics.balanced_accuracy_score,
+                    'average_precision': metrics.average_precision_score, }
 
 
-def time_this_function(func):
+def top_n(loop, n=10, gen=-1, key="value", ascending=False):
+    """return the top result of loop.
+    PendingDeprecation.
+
+    please use loop.top_n() directly.
     """
-    Time the function.
-    use as a decorator.
+    data = loop.data_all
+    data = pd.DataFrame(data)
+    if gen == -1:
+        gen = max(data["gen"])
 
-    Examples
-    ---------
-    ::
-        @time_this_function
+    data = data[data["gen"] == gen]
 
-        def func(x):
-            return x
-        a= func(1)
+    data = data.drop_duplicates(['expr'], keep="first")
+
+    if key is not None:
+        data[key] = data[key].str.replace("(", "")
+        data[key] = data[key].str.replace(")", "")
+        data[key] = data[key].str.replace(",", "")
+        try:
+            data[key] = data[key].astype(float)
+        except ValueError:
+            raise TypeError("check this key column can be translated into float")
+
+        data = data.sort_values(by='value', ascending=ascending).iloc[:n, :]
+
+    return data
+
+
+def cla(pre_y, cl=True):
+    pre_y = 1.0 / (1.0 + np.exp(-pre_y))
+    if cl:
+        pre_y[np.where(pre_y >= 0.5)] = 1
+        pre_y[np.where(pre_y < 0.5)] = 0
+    return pre_y
+
+
+def format_input(expr01, x, y, init_c=None, terminals=None, c_terminals=None, np_maps=None, x_mark="x",
+                 c_mark="c"):
+    """
+    Check and format_input for add_coef_fitting.
 
     Parameters
     ----------
-    func: Callable
-        function
+    expr01:sympy.Expr
+        expr for fitting.
+    x: list of np.ndarray or np.ndarray
+        real data with: [x1,x2,x3,...,x_n_feature] or x with shape (n_sample,n_feature).
+    y: np.ndarray with shape (n_sample,)
+        real data of target.
+    init_c: list of float or float.
+        default 1.
+    terminals: list of sympy.Symbol
+        placeholder for xi, with the same features in expr01.
+    c_terminals:list of sympy.Symbol
+        placeholder for ci, with the same coefficients/constants in expr01.
+    np_maps: dict,default is None
+        for self-definition.
+        1. make your function with sympy.Function and arrange in in expr01.
+        >>> x1, x2, x3, c1,c2,c3,c4 = sympy.symbols("x1,x2,x3,c1,c2,c3,c4")
+        >>> Seg = sympy.Function("Seg")
+        >>> expr01 = Seg(x1*x2,c1)
+        2. write the numpy calculation method for this function.
+        >>> def np_seg(x,c):
+        >>>     res = -x
+        >>>     res[res>-c]=0
+        >>>     return res
+        3. pass the np_maps parameters.
+        >>> np_maps = {"Seg":np_seg}
+
+        In total, when parse the expr01, find the numpy function in sequence by:
+        (np_maps -> numpy's function -> system -> Error)
+    x_mark:str
+        mark for x
+    c_mark:str
+        mark for c
 
     Returns
     -------
-    result
-        function results
+    format_parameters:tuple
+        (expr01, x, y, init_c, terminals, c_terminals, np_maps)
     """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        end = time.time()
-        print(func.__name__, "time", end - start)
-        return result
-
-    return wrapper
-
-
-def check_random_state(seed):
-    """
-    Turn seed into a random.RandomState instance.
-    if use the numpy random, please user the check_random_state in sklearn.
-
-    Parameters
-    ----------
-    seed: None,int or RandomState
-        If seed is None, return the RandomState singleton used by random.
-        If seed is an int, return a new RandomState instance seeded with seed.
-        If seed is already a RandomState instance, return it.
-        Otherwise raise ValueError.
-
-    Returns
-    -------
-    random.Random
-        RandomState object
-    """
-
-    if seed is None or seed is random.random:
-        return random.Random()
-    if isinstance(seed, (numbers.Integral, np.integer)):
-        return random.Random(seed)
-    if isinstance(seed, random.Random):
-        return seed
-    raise ValueError('%r cannot be used to seed a seed'
-                     ' instance' % seed)
-
-
-def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j",
-                parallel_para_dict=None, respective_kwargs=False,
-                **kwargs):
-    """
-
-    Parallelize the function for iterable.
-
-    Examples
-    ----------
-    >>> def func(x):
-    >>>     return x**2
-    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
-    [1,2,3,4,5]
-
-    Note:
-        For "large" calculated function, with small return for each function.
-
-        def func:
-            'large' calculation.
-            ...
-            ...
-            ...
-            return int
-
-    make sure in if __name__ == "__main__":
-
-    Parameters
-    ----------
-    parallel_para_dict:dict
-        Parameters passed to joblib.Parallel
-    batch_size:str,int
-
-    respective:bool
-        Import the parameters respectively or as a whole for each one of iterable object.
-    respective_kwargs:
-        the respective parameters contains kwargs or not. only for mode=="j" and respective=True
-        >>> for iter_i, kw in tqdm(iterable)):
-        >>>    func(*iter_i,**kw)
-
-    tq:bool
-         View Progress or not
-    n_jobs:int
-        cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
-    means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
-    func:
-        function to calculate
-    iterable:
-        iterable object
-    kwargs:
-        kwargs for function
-    store:
-        Not been used.
-        store or not, if store, the result would be store to disk and return nothing.
-    mode:
-        "j":"joblib" or "m":"multiprocessing"
-        m for very big data and small loop.
-
-    Returns
-    -------
-    results
-        function results
-
-    """
-    if respective_kwargs:
-        assert mode == "j" and respective is True
-
-    if parallel_para_dict is None:
-        parallel_para_dict = {}
-    _ = store
-    func = partial(func, **kwargs)
-
-    if mode == "m" and n_jobs != 1:
-        pool = multiprocessing.Pool(processes=n_jobs)
-        if tq:
-            iterable = list(iterable)
-            result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
-                                                          total=len(iterable))]
-            pool.close()
-        else:
-            result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
-            pool.close()
-        return result_list_tqdm
-
-    if effective_n_jobs(n_jobs) == 1:
-        parallel, func = list, func
+    assert isinstance(expr01, Expr)
+    assert isinstance(x, (np.ndarray, list))
+    if isinstance(x, list):
+        assert all([isinstance(i, np.ndarray) and i.ndim == 1 for i in x])
     else:
-        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
-        func = delayed(func)
+        x = [i for i in x.T]
 
-    if tq:
-        if respective:
-            if respective_kwargs:
-                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw) for iter_i, kw in tqdm(iterable))
-                return parallel(func(*iter_i, **kw) for *iter_i, kw in tqdm(iterable))
-            else:
-                return parallel(func(*iter_i) for iter_i in tqdm(iterable))
-        else:
-            return parallel(func(iter_i) for iter_i in tqdm(iterable))
+    assert isinstance(y, np.ndarray) and y.ndim == 1
+
+    if terminals is None:
+        terminals = [i for i in list(expr01.free_symbols) if x_mark in i.name]
+        terminals.sort(key=lambda x: x.name)
     else:
-        if respective:
-            if respective_kwargs:
-                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw)  for iter_i, kw in iterable)
-                return parallel(func(*iter_i, **kw) for *iter_i, kw in iterable)
-            else:
-                return parallel(func(*iter_i) for iter_i in iterable)
-        else:
-            return parallel(func(iter_i) for iter_i in iterable)
+        assert set(terminals) & set(expr01.free_symbols) == set(terminals)
+        assert len(terminals) == len(x)
+
+    if c_terminals is None:
+
+        c_terminals = [i for i in list(expr01.free_symbols) if c_mark in i.name]
+        c_terminals.sort(key=lambda x: x.name)
+    else:
+        assert set(c_terminals) & set(expr01.free_symbols) == set(c_terminals)
+
+    if init_c is None:
+        init_c = [1.0] * len(c_terminals)
+    elif isinstance(init_c, (int, float)):
+        init_c = [init_c] * len(c_terminals)
+    else:
+        assert len(init_c) == len(c_terminals)
+
+    if isinstance(np_maps, dict):
+        for k, v in np_maps.items():
+            assert isinstance(v, Callable)
+
+    if np_maps is None:
+        np_maps = {}
+
+    return expr01, x, y, init_c, terminals, c_terminals, np_maps
 
 
-def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="m",
-                      parallel_para_dict: dict = None, respective_kwargs=False,
-                      **kwargs):
+def acf(expr01, x, y, init_c=None, terminals=None, c_terminals=None, np_maps=None,
+        classification=False, built_format_input=False, ):
     """
-    Parallelize the function for iterable.
+    Add coef fitting.
 
-    The iterable would be batched into batch_size  for less resources transmission.
-
-    Examples
-    ----------
-    >>> def func(x):
-    >>>     return x**2
-    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
-
-    [1,2,3,4,5]
-
-    Note:
-    For "small" calculated function, with small return for each function.
-
-    def func:
-        'small' calculation.
-        ...
-        return int
-
-    make sure in if __name__ == "__main__":
+    Try calculate predict y by sympy expression with coefficients.
+    if except error return expr itself.
 
     Parameters
     ----------
+    expr01:sympy.Expr
+        expr for fitting.
+    x: list of np.ndarray or np.ndarray
+        real data with: [x1,x2,x3,...,x_n_feature].
+    y: np.ndarray with shape (n_sample,)
+        real data of target.
+    init_c: list of float or float,None
+        default 1.
+    terminals: List of sympy.Symbol,None
+        placeholder for xi, with the same features in expr01.
+    c_terminals:List of sympy.Symbol,None
+        placeholder for ci, with the same coefficients/constants in expr01.
+    np_maps: dict,default is None
+        for self-definition.
+        1. make your function with sympy.Function and arrange in in expr01.
+        >>> x1, x2, x3, c1,c2,c3,c4 = sympy.symbols("x1,x2,x3,c1,c2,c3,c4")
+        >>> Seg = sympy.Function("Seg")
+        >>> expr01 = Seg(x1*x2)
+        2. write the numpy calculation method for this function.
+        >>> def np_seg(x):
+        >>>     res = x
+        >>>     res[res>1]=-res[res>1]
+        >>>     return res
+        3. pass the np_maps parameters.
+        >>> np_maps = {"Seg":np_seg}
 
-    respective_kwargs:
-        the respective parameters contains kwargs or not. only for mode=="j" and respective=True.
-        the first iterable i is tuple and second kw is dict.
-        >>> for iter_i, kw in tqdm(iterable)):
-        >>>    func(*iter_i,**kw)
+        In total, when parse the expr01, find the numpy function in sequence by:
+        (np_maps -> numpy's function -> system -> Error)
 
-    parallel_para_dict:dict
-        Parameters passed to joblib.Parallel
-    batch_size:int
-        For small data and very big loop.with model "m"
-    respective:bool
-        Import the parameters respectively or as a whole
-    tq:bool
-         View Progress or not
-    n_jobs:int
-        cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
-    means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
-    func:
-        function to calculate
-    iterable:
-        iterable object
-    mode:
-        "j":"joblib" or "m":"multiprocessing"
-        m for very big data and small loop.
-    kwargs:
-        kwargs for function
-    store:bool,None
-        Not used, store or not, if store, the result would be store to disk and return nothing.
+    classification:bool
+        classfication or not, default False.
+
+    built_format_input:bool
+        use format_input function to check input parameters.
+        Just used for temporary test or single case, due to format_input is repetitive.
 
     Returns
     -------
-    results
-        function results
-
+    pre_y:
+        np.array or None
+    expr01: Expr
+        New expr.
     """
-    if respective_kwargs:
-        assert mode == "j" and respective is True
+    if built_format_input:
+        expr01, x, y, init_c, terminals, c_terminals, np_maps = format_input(expr01, x, y, init_c, terminals,
+                                                                             c_terminals, np_maps, )
 
-    if parallel_para_dict is None:
-        parallel_para_dict = {}
+    if np_maps is None:
+        np_maps = {}
 
-    if effective_n_jobs(n_jobs) == 1:
-        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store,
-                           respective_kwargs=respective_kwargs,
-                           **kwargs, **parallel_para_dict)
-
-    func = partial(func, **kwargs)
-
-    def func_batch_re(iterablei):
-        if respective_kwargs:
-            return [func(*i, **kw) for *i, kw in list(iterablei)]
-        else:
-            return [func(*i) for i in list(iterablei)]
-
-    def func_batch_nre(iterablei):
-        return [func(i) for i in list(iterablei)]
-
-    iterable = list(iterable)
-
-    if mode == "m":
-        # no tq
-
-        pool = multiprocessing.Pool(processes=n_jobs)
-        if tq:
-            rett = [result for result in tqdm(pool.imap(func=func, iterable=iterable, chunksize=batch_size),
-                                              total=len(iterable))]
-            pool.close()
-        else:
-            rett = [result for result in pool.imap(func=func, iterable=iterable, chunksize=batch_size)]
-            pool.close()
-        return rett
-
-    batch = len(iterable) // batch_size + 1
-    iterables = np.array_split(iterable, batch)
-
-    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
-
-    if respective:
-        func_batch = delayed(func_batch_re)
-    else:
-        func_batch = delayed(func_batch_nre)
+    expr00 = copy.copy(expr01)
 
     try:
-        if tq:
-            y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables))
+
+        func0 = sympy.utilities.lambdify(terminals + c_terminals, expr01, modules=[np_maps, "numpy"])
+
+        def func(x_, p):
+            """"""
+
+            return func0(*x_, *p)
+
+        def res(p, x_, y_):
+            """"""
+            return y_ - func(x_, p)
+
+        def res2(p, x_, y_):
+            """"""
+            pre_y = func(x_, p)
+            ress = y_ - cla(pre_y, cl=False)
+
+            return ress
+
+        if not classification:
+            result = least_squares(res, x0=init_c, args=(x, y),
+                                   xtol=1e-4, ftol=1e-5, gtol=1e-5,
+                                   # long
+                                   jac='3-point', loss='linear')
         else:
-            y = parallel(func_batch_nre(iter_i) for iter_i in iterables)
+            result = least_squares(res2, x0=init_c, args=(x, y),
+                                   xtol=1e-4, ftol=1e-5, gtol=1e-5,
+                                   # long
+                                   jac='3-point', loss='linear')
+        cof = np.round(result.x, 3)
 
-        ret = []
-        [ret.extend(i) for i in y]
-        return ret
-    except MemoryError:
+        pre_y = func0(*x, *cof)
+        if classification:
+            pre_y = cla(pre_y, cl=True)
 
-        raise MemoryError(
-            "The total size of calculation is out of Memory, please try ’store‘ result to disk but return to window")
+        for ai, choi in zip(c_terminals, cof):
+            expr01 = expr01.xreplace({ai: choi})
 
-
-def parallelize_imap(n_jobs, func, iterable, tq=True):
-    """
-    Parallelize the function for iterable.
-
-    For very big loop and small data.
-
-    Parameters
-    ----------
-    func:function
-    iterable:List
-    n_jobs:int
-    tq:bool
-    """
-    pool = multiprocessing.Pool(processes=n_jobs)
-    if tq:
-        result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
-                                                      total=len(iterable))]
-        pool.close()
-    else:
-        result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
-        pool.close()
-
-    return result_list_tqdm
-
-
-def parallelize_parameter(func, iterable, respective=False, **kwargs):
-    """Decrease your output size of your function"""
-    import multiprocessing
-    maxx = multiprocessing.cpu_count()
-    n_jobs = maxx - 2
-
-    batch_size = [5, 10, 25, 50, 100]
-
-    iterable2 = []
-    for i, j in enumerate(iterable):
-        iterable2.append(j)
-        if i > 10:
-            break
-    iterable2 = [iterable2] * 300
-    iterable2 = list(chain(*iterable2))
-
-    t1 = time.time()
-    if respective:
-        a = list(func(*iter_i) for iter_i in iterable2[:16])
-    else:
-        a = list(func(iter_i) for iter_i in iterable2[:16])
-    t2 = time.time()
-    t12 = (t2 - t1) / 16
-    size = sum([getsizeof(i) for i in a]) / 16 / 1024
-    print("Time of calculation/each:%s," % t12, "each output size:%s Kbytes" % size)
-
-    for batch_sizei in batch_size:
-        t3 = time.time()
-        parallelize(n_jobs, func, iterable2, respective, batch_size=batch_sizei, **kwargs)
-        t4 = time.time()
-        t34 = t4 - t3
-        size2 = size * batch_sizei
-        print("Total time/each:%s," % (t34 / 300), "Return output time/each:%s," % (t34 / 300 - t12),
-              "Batch output size:%s Kbytes," % size2, "Batch_size:%s" % batch_sizei)
-
-    print("Choice the batch_size with min Total time.")
-
-
-def logg(func, printing=True, back=False):
-    """
-    Get the name of function
-    use as a decorator
-
-    Parameters
-    ----------
-    func:Callable
-        function to calculate
-    printing:bool
-        print or not
-    back:bool
-        return result or not
-
-    Returns
-    -------
-    function results
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if inspect.isclass(func):
-            name = "instance of %s" % func.__name__
-            arg_dict = ""
-            if printing:
-                print(name, arg_dict)
-            result = func(*args, **kwargs)
-        elif inspect.isfunction(func):
-            arg_dict = inspect.getcallargs(func, *args, **kwargs)
-            name = func.__name__
-            if printing:
-                print(name, arg_dict)
-            result = func(*args, **kwargs)
-        else:
-            arg_dict = ""
-            name = ""
-            result = func(*args, **kwargs)
+        if isinstance(pre_y, float):
+            pre_y = None
+        elif all(np.isfinite(pre_y)):
             pass
-        if back:
-            return (name, arg_dict), result
         else:
-            return result
+            pre_y = None
 
-    return wrapper
+    except (ValueError, KeyError, NameError, TypeError, ZeroDivisionError, IndexError):
+        # except ImportError:
+
+        expr01 = expr00
+        pre_y = None
+
+    return pre_y, expr01,
 
 
-def name_to_name(*iters, search, search_which=1, return_which=(1,), two_layer=False):
+def acfs(expr01, x, y, init_c=None, terminals=None, c_terminals=None, np_maps=None,
+         classification=False, built_format_input=False, scoring="r2"):
     """
-    search and rank the list.
+    Add coefficients and score.
+
+    See also add_coef_fitting (acf)."""
+    pre_y, expr01 = acf(expr01, x, y, init_c, terminals, c_terminals, np_maps,
+                        classification, built_format_input, )
+
+    scoring = score_collection[scoring]
+    if pre_y is None:
+        score = np.nan
+    else:
+        score = scoring(y, pre_y)
+    return score
+
+
+def acfng(expr01, x, y, init_c=None, terminals=None, c_terminals=None,
+          np_maps=None, classification=False,
+          no_gradient_coef=-1, no_gradient_coef_range=np.arange(-1, 1, 1), n_jobs=1,
+          scoring="r2"
+          ):
+    """
+    Add coefficients with no gradient coefficient.
+
+    Try calculate predict y by sympy expression with coefficients.
+    if except error return expr itself.
+
 
     Parameters
     ----------
-    iters:tuple
-        iterable objects to select and sort
-    search:Iterable
-        the rank basis
-    search_which:int
-        the (the index of iters) of the rank basis. where to rank
-    return_which:tuple of int
-        return index in inters
-    two_layer:bool
-        search is nested with two layer or not
+    scoring:str
+        score in sklearn.metrics
+    n_jobs: int
+        parallize number
+    no_gradient_coef: int,sympy.Symbol
+        coefficient in no gradient function, default the last one.
+        Examples:
+        no_gradient_coef=sympy.Symbol("c2")
+        no_gradient_coef=0
+    no_gradient_coef_range:
+        range of the special coef.
+    expr01:sympy.Expr
+        expr for fitting.
+    x: list of np.ndarray or np.ndarray
+        real data with: [x1,x2,x3,...,x_n_feature].
+    y: np.ndarray with shape (n_sample,)
+        real data of target.
+    init_c: list of float or float,None
+        default 1.
+    terminals: List of sympy.Symbol,None
+        placeholder for xi, with the same features in expr01.
+    c_terminals:List of sympy.Symbol,None
+        placeholder for ci, with the same coefficients/constants in expr01.
+    np_maps: dict,default is None
+        for self-definition.
+        1. make your function with sympy.Function and arrange in in expr01.
+        >>> x1, x2, x3, c1,c2,c3,c4 = sympy.symbols("x1,x2,x3,c1,c2,c3,c4")
+        >>> Seg = sympy.Function("Seg")
+        >>> expr01 = Seg(x1*x2)
+        2. write the numpy calculation method for this function.
+        >>> def np_seg(x):
+        >>>     res = x
+        >>>     res[res>1]=-res[res>1]
+        >>>     return res
+        3. pass the np_maps parameters.
+        >>> np_maps = {"Seg":np_seg}
+
+        In total, when parse the expr01, find the numpy function in sequence by:
+        (np_maps -> numpy's function -> system -> Error)
+
+    classification:bool
+        classfication or not, default False.
 
     Returns
     -------
-    result:Iterable
-        Result of find and sort
+    pre_y:
+        np.array or None
+    expr01: Expr
+        New expr.
     """
-    if isinstance(return_which, int):
-        return_which = tuple([return_which, ])
-    if two_layer:
+    expr01, x, y, init_c, terminals, c_terminals, np_maps = format_input(expr01, x, y, init_c, terminals,
+                                                                         c_terminals, np_maps)
+    if isinstance(no_gradient_coef, int):
+        no_gradient_coef = c_terminals[no_gradient_coef]
 
-        results_all = []
-        if isinstance(search, Iterable):
-            for index_i in search:
-                results_all.append(
-                    name_to_name(*iters, search=index_i, search_which=search_which,
-                                 return_which=return_which, two_layer=False))
-
-            if len(return_which) >= 2:
-                return list(zip(*results_all))
-            else:
-                return results_all
-        else:
-            raise IndexError("search_name or search should be iterable")
-
-    else:
-
-        zeros = [list(range(len(iters[0])))]
-
-        zeros.extend([list(_) for _ in iters])
-
-        iters = zeros
-
-        zips = list(zip(*iters))
-
-        if isinstance(search, Iterable):
-
-            search_index = [iters[search_which].index(i) for i in search]
-
-            results = [zips[i] for i in search_index]
-
-        else:
-
-            raise IndexError("search_name or search should be iterable")
-
-        res = list(zip(*results))
-
-        if not res:
-            return_res = [[] for _ in return_which]
-        else:
-            return_res = [res[_] for _ in return_which]
-
-        if len(return_which) == 1:
-            return_res = return_res[0]
-        return return_res
+    exprs = [expr01.xreplace({no_gradient_coef: i}) for i in no_gradient_coef_range]
 
 
-class _TTClass(dict):
 
-    def __init__(self, **kwargs):
-        super(_TTClass, self).__init__(**kwargs)
+    func = functools.partial(acfs, x=x, y=y, init_c=init_c, terminals=terminals, c_terminals=c_terminals,
+                             np_maps=np_maps, classification=classification, built_format_input=False)
 
-    def _t(self):
-        self._r()
+    # pool = multiprocessing.Pool(processes=n_jobs)
+    # scores = []
+    # for expr01 in exprs:
+    #     scores.append(pool.apply_async(func, (expr01,)).get())
+    # pool.close()
+    # pool.join()
 
-    def _p(self):
-        a = np.array(list(self.keys()))
-        b = np.array(list(self.values()))
-        a0 = np.delete(a, 0)
-        a = np.delete(a, -1)
-        b0 = np.delete(b, 0)
-        b = np.delete(b, -1)
-        ti = b0 - b
+    scores = parallelize(n_jobs, func=func, iterable=exprs,mode="m")
+    #
+    maxp = False if "neg" in scoring else True
 
-        def func(x, y):
-            return "{}-{}:".format(x, y)
+    scores = np.array(scores)
+    scores_error = ~ np.isfinite(scores)
+    scores[scores_error] = -np.inf if maxp else np.inf
+    index = np.argmax(scores) if maxp else np.argmin(scores)
+    score = scores[index]
+    print(score)
+    i = list(no_gradient_coef_range)[index]
 
-        ufunc = np.frompyfunc(func, 2, 1)
-        ni = ufunc(a0, a)
-        re = np.vstack((ni, ti))
-        re = re.T
-        print(re)
-        self.clear()
+    expr01 = expr01.xreplace({no_gradient_coef: i})
 
-    def _r(self, name=None):
-        ti = time.time()
-        if name is None:
-            n = len(self)
-            name = "t%s" % n
-        self[name] = ti
-
-    def subs(self, name1, name2):
-        if name2 in self and name2 in self:
-            return self[name1] - self[name2]
-        else:
-            raise NameError("There is no name:{} or {}".format(name1, name2))
-
-    # def tp(self, name=None):
-    #     ti = time.time()
-    #     n = len(self)
-    #     if name is None:
-    #         name = "tp"
-    #     if n >= 1:
-    #         name0 = list(self.keys())[-1]
-    #         t0 = list(self.values())[-1]
-    #         print("-".join((name,name0)), ti - t0)
-    #     else:
-    #         raise UserWarning("The .tp only used after .t, or .r")
+    return acf(expr01, x, y, init_c, terminals, c_terminals, np_maps,
+               classification=classification,
+               built_format_input=False)
 
 
-class TTClass(_TTClass):
+def acfsng(expr01, x, y, init_c=None, terminals=None, c_terminals=None,
+           np_maps=None, classification=False,
+           no_gradient_coef=-1, no_gradient_coef_range=np.arange(-1, 1, 1),
+           n_jobs=1, scoring="r2"):
     """
-    quick time.
-    use tt object.
+    Add coefficients and score with no gradient coefficient.
 
-    Examples:
-    -----------
-    >>> tt.t
-    >>> a=4
-    >>> tt.t
-    >>> tt.p
-    [['t1-t0:' ****]]
+    See also add_coef_fitting (acf)."""
+    pre_y, expr01 = acfng(expr01, x, y, init_c, terminals,
+                          c_terminals, np_maps,
+                          classification, no_gradient_coef=no_gradient_coef,
+                          no_gradient_coef_range=no_gradient_coef_range,
+                          n_jobs=n_jobs, scoring=scoring)
 
-    """
-
-    def __init__(self, **kwargs):
-        super(_TTClass, self).__init__(**kwargs)
-
-    def __getattribute__(self, item):
-        if item == "t":
-            _TTClass._t(self)
-
-        elif item == "p":
-            _TTClass._p(self)
-
-        elif item[-1] in "0123456789":
-            _TTClass._r(self, name=item)
-
-        else:
-            return _TTClass.__getattribute__(self, item)
-
-
-def def_pwd(path=None, change=True, verbose=False):
-    """try of get and define work path."""
-    if path is None:
-        path = os.getcwd()
-        pwd = path
-    if os.path.exists(path):
-        path = os.path.abspath(path)
-        if change:
-            os.chdir(path)
-        pwd = os.getcwd()
+    scoring = score_collection[scoring]
+    if pre_y is None:
+        score = np.nan
     else:
-        os.makedirs(path)
-        path = os.path.abspath(path)
-        if change:
-            os.chdir(path)
-        pwd = os.getcwd()
-    if verbose:
-        print("work path:", pwd)
-        print("checked path:", path)
-    locals()[pwd] = pwd
-    return path
-
-
-def get_name_without_suffix(module_name):
-    """Get the name without suffix."""
-    if "-" in module_name:
-        print("'-' in '{}' is replaced by '_'".format(module_name))
-    module_name = module_name.replace("-", "_")
-
-    module_fc = re.compile(r"\W")
-    module_fc = module_fc.findall(module_name)
-    if module_fc[0] == "." and len(module_fc) == 1:
-        module_name = module_name.split(".")[0]
-    else:
-        module_fc.remove(".")
-        raise NameError("The string {} in module_name is special character.".format(module_fc))
-    print("Confirm the model name: {}".format(module_name))
-    return module_name
-
-
-tt = TTClass()
+        score = scoring(y, pre_y)
+    return score
 
 if __name__ == "__main__":
-    # def func(n, _=None):
-    #     # time.sleep(0.0001)
-    #     s = np.random.random((100, 50))
-    #     return s
-    #
-    #
-    # iterable = np.arange(10000)
-    # iterable2 = np.arange(20000)
-    # tt.t
-    # s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
-    # tt.t
-    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
-    # tt.t
-    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, )
-    # tt.t
-    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, )
-    #
-    # tt.t
-    # s = parallelize(1, func, list(zip(iterable, iterable)), respective=True, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,
-    #                       mode="m")
-    # tt.t
-    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # tt.p
-
-    def func2(n, j, dc=None, dp=None):
-        # time.sleep(0.0001)
-        assert isinstance(dc, np.int64)
-        assert isinstance(dp, np.int64)
-        s = np.random.random((100, 50))
-        return s
+    x1, x2, x3, c1, c2, c3 = sympy.symbols("x1,x2,x3,c1,c2,c3")
 
 
-    iterable = np.arange(10000)
-    kw = [{"dc": iterable[i], "dp": iterable[i]} for i in range(len(iterable))]
-    iterables = zip(iterable, iterable, kw)
-    # iterables = zip(iterable,kw)
-    tt.t
-    s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True)
-    tt.t
-    tt.p
+    x = np.array([[1, 2, 3, 4, 5,4,2,3], [9, 8, 7, 6, 5,5,1,8], [4, 5, 6, 5, 4,7,4,9]]).T
+    y = np.array([3, 3, 5, 6, 5,2,2,3])
 
-    tt.t
-    s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",
-                          respective_kwargs=True)
-    tt.t
-    tt.p
+    Seg = sympy.Function("Seg")
+
+    def np_seg(x,c):
+        res = -x
+        res[res>-c]=0
+        return res
+
+    expr = 0.047*Seg(x3,c3)+c1*x2/(x1-1.47)+c2
+
+    expr01, x, y, init_c, terminals, c_terminals, _ = format_input(expr, x, y)
+    np_maps = {"Seg":np_seg}
+    score = acfsng(expr01, x, y, init_c, terminals, c_terminals,
+                          np_maps=np_maps,
+                          no_gradient_coef=-1,
+                          no_gradient_coef_range=np.arange(-5, -3, 0.1),
+                          n_jobs=1, scoring="r2"
+                          )
