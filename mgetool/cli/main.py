@@ -7,25 +7,25 @@ class CLIError(Exception):
     """Error for CLI commands.
 
     A subcommand may raise this.  The message will be forwarded to
-    the error() method of the argument parser."""
+    the error() method of the argument args."""
 
 
 # Important: Following any change to command-line parameters, use
 # python3 -m ase.cli.completion to update autocompletion.
-commands = [
+commands_ = [
 
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
-    ('batchrun', 'mgetool.cli.matchrun'),
+    ('batchrun', 'mgetool.cli.batchrun'),
     ('autoincar', 'mgetool.cli.autoincar'),
     # ('run', 'ase.cli.run'),
 
 ]
 
 
-def main(prog='mgetool', description='mgetool command line tool.', commands=None, args=None):
-    if commands is None:
-        commands = commands
+def main(prog='mgetool', description='mgetool command line tool.', args=None):
+
+    commands = commands_
     parser = argparse.ArgumentParser(prog=prog,
                                      description=description,
                                      formatter_class=Formatter)

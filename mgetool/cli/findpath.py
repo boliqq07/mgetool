@@ -28,21 +28,27 @@ class CLICommand:
         parser.add_argument('-id', '--dir_include', help='include dir name.',type=str,default=None)
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.',type=str,default=None)
         parser.add_argument('-l', '--layer', help='dir depth,default the last layer', type=int, default=-1)
-
+        parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
 
     @staticmethod
-    def run(parser):
-        parser = parser.parse_args()
-        bf = BatchFile(parser.path, suffix=parser.suffix)
-        bf.filter_dir_name(include=parser.dir_include,exclude=parser.dir_exclude,layer=parser.layer)
-        bf.filter_file_name(include=parser.file_include,exclude=parser.file_exclude)
+    def run(args, parser):
+        # args = args.parse_args()
+        bf = BatchFile(args.path, suffix=args.suffix)
+        bf.filter_dir_name(include=args.dir_include, exclude=args.dir_exclude, layer=args.layer)
+        bf.filter_file_name(include=args.file_include, exclude=args.file_exclude)
         bf.merge()
 
         fdir = bf.file_dir
         fdir.sort()
+        os.chdir(args.path)
+        if not args.abspath:
+            absp = os.path.abspath(args.path)
+            fdir = [i.replace(absp,".") for i in fdir]
         with open("paths.temp", mode="w") as f:
+            fdir = "\n".join(fdir)
             f.writelines(fdir)
-            os.getcwd()
+
+        os.getcwd()
         print("The paths are stored in '{}'".format(os.getcwd()))
 
 

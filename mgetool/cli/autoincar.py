@@ -298,12 +298,12 @@ class CLICommand:
                             help='一段描述该体系的话。如：半导体静态计算。金属弛豫计算。分子低精度静态计算。')
         parser.add_argument('-p', dest='params', default={}, type=str,
                             help='明确的 Incar 参数，字典格式，如： {"NSW":100} ')
-        parser.add_argument('-site', dest='site', default=None,
+        parser.add_argument('-s', dest='site', default=None,
                             help='文件存放位置，默认当前位置')
 
     @staticmethod
-    def run(parser):
-        args = parser.parse_args()
+    def run(args, parser):
+        # args = args.parse_args()
         notes = args.notes
         params = args.params
         path = args.site
@@ -347,7 +347,7 @@ if __name__ == '__main__':
                         help='一段描述该体系的话。如：半导体静态计算。金属弛豫计算。分子低精度静态计算。')
     parser.add_argument('-p', dest='params', default={}, type=str,
                         help='明确的 Incar 参数，字典格式，如： {"NSW":100} ')
-    parser.add_argument('-site', dest='site', default=None,
+    parser.add_argument('-s', dest='site', default=None,
                         help='文件存放位置，默认当前位置')
 
     args = parser.parse_args()

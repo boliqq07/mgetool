@@ -275,8 +275,8 @@ class CLICommand:
                             help='该 INCAR 也批量复制。')
 
     @staticmethod
-    def run(parser):
-        args = parser.parse_args()
+    def run(args, parser):
+        # args = args.parse_args()
         upload(run_tem=args.run_tem, pwd=args.pwd, existed_run_tem=args.existed_run_tem, job_type=args.job_type,
                INCAR=args.INCAR)
 
