@@ -1,1 +1,1 @@
-__all__ = ["exports", "imports", "show", "tool", "newclass", "packbox","translate_msgid", "io"]
+__all__ = ["exports", "imports", "show", "tool", "newclass", "packbox","translate_msgid", "cli"]

@@ -1,2 +1,2 @@
-from ase.cli.main import main
+from mgetool.cli.main import main
 main()

@@ -1,5 +1,4 @@
 import argparse
-import sys
 import textwrap
 from importlib import import_module
 
@@ -18,6 +17,7 @@ commands = [
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
     ('batchrun', 'mgetool.cli.matchrun'),
+    ('autoincar', 'mgetool.cli.autoincar'),
     # ('run', 'ase.cli.run'),
 
 ]

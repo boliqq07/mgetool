@@ -1,3 +1,4 @@
 include README.md
 include requirements.txt
 include LICENSE
+include __main__.py
