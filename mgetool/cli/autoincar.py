@@ -276,6 +276,62 @@ def auto_incar_file(notes="", params: Dict[str, Any] = None, path=None):
     path = os.path.abspath(path)
     path = os.path.join(path, 'INCAR')
     incar.write_file(path)
+    print("Incar file is stored in {}".format(path))
+
+
+class CLICommand:
+
+    """
+    '自动产生 INCAR 脚本（仅供参考）.\n'
+    '最方便用法: \n'
+    'python autoincar.py -n 半导体静态计算 -p {"NSW":100} \n'
+    'python autoincar.py -n 金属弛豫计算 \n'
+
+    Example:
+
+        $ mgetool autoincar -n 金属弛豫
+    """
+
+    @staticmethod
+    def add_arguments(parser):
+        parser.add_argument('-n', dest='notes', default="",
+                            help='一段描述该体系的话。如：半导体静态计算。金属弛豫计算。分子低精度静态计算。')
+        parser.add_argument('-p', dest='params', default={}, type=str,
+                            help='明确的 Incar 参数，字典格式，如： {"NSW":100} ')
+        parser.add_argument('-site', dest='site', default=None,
+                            help='文件存放位置，默认当前位置')
+
+    @staticmethod
+    def run(parser):
+        args = parser.parse_args()
+        notes = args.notes
+        params = args.params
+        path = args.site
+
+        params_ = {}
+
+        if isinstance(params, str):
+
+            if ":" in params:
+                ttp = True
+                params = params.replace("{", "")
+                params = params.replace("}", "")
+            else:
+                ttp = False
+
+            params = params.split(",")
+            if ttp:
+
+                params = [i.split(":") for i in params]
+            else:
+                params = [i.split("=") for i in params]
+
+            params = [(i[0].replace(" ", ""), i[1]) for i in params]
+
+            params_.update(params)
+            assert isinstance(params_, dict)
+
+        auto_incar_file(notes=notes, params=params_, path=path)
 
 
 ################################################################################################################
@@ -285,10 +341,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='自动产生 INCAR 脚本（仅供参考）.\n'
                                                  '最方便用法: \n'
-                                                 'python incar.py -n 半导体静态计算 -p {"NSW":100} \n'
-                                                 'python incar.py -n 金属弛豫计算 \n')
+                                                 'python autoincar.py -n 半导体静态计算 -p {"NSW":100} \n'
+                                                 'python autoincar.py -n 金属弛豫计算 \n')
     parser.add_argument('-n', dest='notes', default="",
-                        help='一段描述该体系的话。如：半导体静态计算。 金属弛豫计算。 分子低精度静态计算。')
+                        help='一段描述该体系的话。如：半导体静态计算。金属弛豫计算。分子低精度静态计算。')
     parser.add_argument('-p', dest='params', default={}, type=str,
                         help='明确的 Incar 参数，字典格式，如： {"NSW":100} ')
     parser.add_argument('-site', dest='site', default=None,

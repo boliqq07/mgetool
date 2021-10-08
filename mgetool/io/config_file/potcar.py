@@ -13,7 +13,6 @@ try:
 except ImportError:
     from pymatgen.core import SETTINGS
 
-
 from pymatgen.io.vasp import Potcar, Poscar
 
 
@@ -30,10 +29,13 @@ def check_PMG_VASP_PSP_DIR():
 
 def set_PMG_VASP_PSP_DIR(abspath):
     """
-    # 初始potcar,位置为 EXTRACTED_VASP_POTCAR （初始poscar数据源在华为盘，百度盘，240）
+    一. abspath 文件夹产生方式为：
+
+    # 初始potcar, 位置为 EXTRACTED_VASP_POTCAR （初始poscar数据源在华为盘，百度盘，240）
     # 1.`pmg config - p <EXTRACTED_VASP_POTCAR>  ../../poscar_pmg  ` 产生 poscar_pmg 文件夹。
     # 2.`pmg config --add PMG_VASP_PSP_DIR <MY_PSP> ` 设置 poscar_pmg 文件夹。
-    如果直接有 poscar_pmg 文件夹，可使用此函数设置 poscar_pmg 路径，也可以直接用第二步。
+
+    二. 如果直接有 poscar_pmg 文件夹，可使用此函数设置 poscar_pmg 路径，也可以直接用第二步。
     """
     d = SETTINGS.get("PMG_VASP_PSP_DIR")
     SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".pmgrc.yaml")

@@ -640,6 +640,23 @@ def get_name_without_suffix(module_name):
     return module_name
 
 
+def cmd_sys(d,cmd):
+    """run linux cmd"""
+    old = os.getcwd()
+    os.chdir(d)
+    os.system(cmd)
+    os.chdir(old)
+
+
+def cmd_popen(d,cmd):
+    """run linux cmd and return result."""
+    old = os.getcwd()
+    os.chdir(d)
+    res = os.popen(cmd).readlines()
+    os.chdir(old)
+    return res
+
+
 tt = TTClass()
 
 if __name__ == "__main__":

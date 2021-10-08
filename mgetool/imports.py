@@ -297,6 +297,7 @@ class BatchFile:
         self.init_file = tuple(self.file_list)
         self.file_list_merge = []
         self.file_list_merge_new = []
+        self.file_dir = []
 
     def filter_file_name(self, include=None, exclude=None):
         """
@@ -311,6 +312,10 @@ class BatchFile:
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
 
         """
+
+        if include is None and exclude is None:
+            return
+
         assert include != []
         assert exclude != []
         if isinstance(include, str):
@@ -358,6 +363,9 @@ class BatchFile:
                 /home/ast/eag/kgg, -3
 
         """
+        if include is None and exclude is None:
+            return
+
         assert include != []
         assert exclude != []
         if isinstance(include, str):
@@ -474,6 +482,9 @@ class BatchFile:
 
         if refresh_file_list:
             self.file_list_merge = file_list_merge
+        fdir = list(set([os.path.dirname(i) for i in file_list_merge]))
+        fdir.sort()
+        self.file_dir = fdir
         return file_list_merge
 
     def to_path(self, new_path, flatten=False, add_dir="3-layer", pop=0, n_jobs=1):
@@ -509,9 +520,9 @@ class BatchFile:
             raise UserWarning("There are same name files after flatten folders. "
                               "you can change add_dir to add difference prefix to files", )
         if n_jobs != 1:
-            parallelize(n_jobs, self.copy_user, zip(self.file_list_merge, self.file_list_merge_new,),
-                              mode="j",
-                              respective=False)
+            parallelize(n_jobs, self.copy_user, zip(self.file_list_merge, self.file_list_merge_new, ),
+                        mode="j",
+                        respective=False)
         else:
             for ij in tqdm(list(zip(self.file_list_merge, self.file_list_merge_new))):
                 self.copy_user(ij)

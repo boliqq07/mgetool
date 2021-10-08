@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""原版位置在perovskite包中，请从该处修改并复制。"""
+"""以mgetool中版本为准，若在其它处更改，请更新mgetool。"""
 import os
 
 from tqdm import tqdm
@@ -236,8 +236,49 @@ done
     batch_str = batch_str.replace(",", "")
     bach = open("batch.sh", "w")
     bach.write(batch_str)
+    bach.close()
     print("###################################################")
     print("OK")
+
+
+class CLICommand:
+
+    """
+    '产生任务批处理文件,请保证 -r,-e 至少存在一个.\n'
+    '最方便用法: \n'
+    '1.把该文件放到和算例同一文件夹下，并提供 pbs or lsf 等模板给 -r 参数.\n'
+    "python batchrun.py -r \***\pbs.run\n"
+    "2.若算例中已经存在pbs or lsf 模板，请提供模板名字及种类给 -e, -t 参数.\n"
+    "python batchrun.py -e pbs.run -t lsf \n"
+
+
+    Example:
+
+        $ mgetool batchrun -p /home/dir_name -if POSCAR
+    """
+
+    @staticmethod
+    def add_arguments(parser):
+        parser.add_argument('-r', dest='run_tem', default=None,
+                            help='{pbs,lsf}模板文件地址')
+        parser.add_argument('-p', dest='pwd', default=None,
+                            help='所有算例地址, 默认当前地址')
+        parser.add_argument('-e', dest='existed_run_tem', default=None,
+                            help='当子文件夹已经存在{pbs,lsf}模板文件，直接使用它。提供该统一模板文件的名字')
+        parser.add_argument('-t', dest='job_type', default=None,
+                            help='作业提交系统, 默认根据模板判断，当没有-r时，需要被提供')
+        parser.add_argument('-i', dest='filter_in', default=None,
+                            help='过滤条件，当文件夹包含该字符串被选中')
+        parser.add_argument('-o', dest='filter_in', default=None,
+                            help='过滤条件，当文件夹包含该字符串被忽略')
+        parser.add_argument('-incar', dest='INCAR', default=None,
+                            help='该 INCAR 也批量复制。')
+
+    @staticmethod
+    def run(parser):
+        args = parser.parse_args()
+        upload(run_tem=args.run_tem, pwd=args.pwd, existed_run_tem=args.existed_run_tem, job_type=args.job_type,
+               INCAR=args.INCAR)
 
 
 ################################################################################################################
@@ -248,9 +289,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='产生任务批处理文件,请保证 -r,-e 至少存在一个.\n'
                                                  '最方便用法: \n'
                                                  '1.把该文件放到和算例同一文件夹下，并提供 pbs or lsf 等模板给 -r 参数.\n'
-                                                 "python batch_run.py -r \***\pbs.run\n"
+                                                 "python batchrun.py -r \***\pbs.run\n"
                                                  "2.若算例中已经存在pbs or lsf 模板，请提供模板名字及种类给 -e, -t 参数.\n"
-                                                 "python batch_run.py -e pbs.run -t lsf \n")
+                                                 "python batchrun.py -e pbs.run -t lsf \n")
     parser.add_argument('-r', dest='run_tem', default=None,
                         help='{pbs,lsf}模板文件地址')
     parser.add_argument('-p', dest='pwd', default=None,
