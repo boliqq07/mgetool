@@ -21,6 +21,8 @@ echo $dirname
 
 old_path = $dirname
 
+do
+
 for i in {}
 
 {}
@@ -47,6 +49,8 @@ echo $dirname
 old_path = $dirname
 
 for i in $(cat {})
+
+do
 
 {}
 
