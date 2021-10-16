@@ -21,7 +21,7 @@ class CLICommand:
 
     @staticmethod
     def add_arguments(parser):
-        parser.add_argument('-p', '--path', help='source path',type=str, default=None)
+        parser.add_argument('-p', '--path', help='source path',type=str, default=".")
         parser.add_argument('-s', '--suffix', help='suffix of file',type=str,default=None)
         parser.add_argument('-if', '--file_include', help='include file name.',type=str,default=None)
         parser.add_argument('-ef', '--file_exclude', help='exclude file name.',type=str,default=None)
