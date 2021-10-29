@@ -247,7 +247,7 @@ class CLICommand:
     '产生任务批处理文件,请保证 -r,-e 至少存在一个.\n'
     '最方便用法: \n'
     '1.把该文件放到和算例同一文件夹下，并提供 pbs or lsf 等模板给 -r 参数.\n'
-    "python batchrun.py -r \***\pbs.run\n"
+    "python batchrun.py -r \***\pbs.run  \n"
     "2.若算例中已经存在pbs or lsf 模板，请提供模板名字及种类给 -e, -t 参数.\n"
     "python batchrun.py -e pbs.run -t lsf \n"
 
