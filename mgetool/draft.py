@@ -524,7 +524,7 @@ if __name__ == "__main__":
         return setup_text
 
     def _text_head(self, *args, **kwargs):
-        return ["# cython: language_level=3\n",
+        return [
                 ]
 
 
