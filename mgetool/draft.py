@@ -37,6 +37,15 @@ Examples
 >>> bd.write(functions=["cubic","fcc","bcc"])
 >>> a= bd.quick_import(build=True)
 >>> # bd.remove()
+
+
+Examples
+---------
+
+>>> from mgetool.draft import TorchJit
+>>> bd = TorchJit("speedup_torch.cpp",warm_start=True)
+>>> a= bd.quick_import(build=False)
+
 """
 
 import os
@@ -52,7 +61,7 @@ from mgetool.tool import def_pwd, get_name_without_suffix
 class BaseDraft:
     """Base draft for quick test."""
 
-    def __init__(self, file, path=None, temps="temps", warm_start=False, only_file=True):
+    def __init__(self, file, path=None, temps="temps", warm_start=False, only_file=True, log_print=True):
         """
         Add one temps dir and copy all the file to this disk to escape pollution.
 
@@ -68,12 +77,15 @@ class BaseDraft:
             start from exist file.
         only_file:bool
             just copy the source file to temps.
+        log_print:bool
+            print the log or not.
         """
+        self.log_print = log_print
         self.init_path = os.getcwd()
         # check file
         if path:
             assert r"/" not in file, "Path must in one of `path` parameter or the `filename`."
-            assert r"\\" not in file,  "Path must in one of `path` parameter or the `filename`."
+            assert r"\\" not in file, "Path must in one of `path` parameter or the `filename`."
         else:
             if "/" in file or "\\" in file:
                 path = Path(file).parent
@@ -269,9 +281,11 @@ class BaseDraft:
         self.build = build
         if self._suffix() != "pyx":
             with_html = False
-        mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix, with_html=with_html)
+        mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix, with_html=with_html,
+                           log_print=self.log_print)
         os.chdir(self.init_path)
-        print("Move back to {}".format(self.init_path))
+        if self.log_print:
+            print("Move back to {}".format(self.init_path))
         return mod
 
     def remove(self, numbers=None):
@@ -340,10 +354,10 @@ class DraftPybind11(BaseDraft):
         self.pybind11_path = pybind11_path
 
         self.eigen_path = "." if eigen_path is None else eigen_path
-
-        print("Check and re-set you path:")
-        print("pybind11_path:{}".format(pybind11_path))
-        print("eigen_path:{}".format(pybind11_path))
+        if self.log_print:
+            print("Check and re-set you path:")
+            print("pybind11_path:{}".format(pybind11_path))
+            print("eigen_path:{}".format(pybind11_path))
 
     def _suffix(self):
         return "cpp"
@@ -489,7 +503,7 @@ class DraftPyx(BaseDraft):
     >>> # bd.remove()
     """
 
-    def __init__(self, *args, language=None, **kwargs):
+    def __init__(self, *args, language="c", **kwargs):
         super(DraftPyx, self).__init__(*args, **kwargs)
         self.language = language
 
@@ -519,13 +533,13 @@ if __name__ == "__main__":
 # total:
 # python setup.py bdist_wheel
 
-""".format(module_name=module_name, f_pyx=file,language=self.language)
+""".format(module_name=module_name, f_pyx=file, language=self.language)
 
         return setup_text
 
     def _text_head(self, *args, **kwargs):
         return [
-                ]
+        ]
 
 
 class DraftTorch(BaseDraft):
@@ -546,9 +560,9 @@ class DraftTorch(BaseDraft):
     def __init__(self, *args, pybind11_path=r'/home/iap13/wcx/pybind11', **kwargs):
         super(DraftTorch, self).__init__(*args, **kwargs)
         self.pybind11_path = pybind11_path
-
-        print("Check and re-set you path:")
-        print("pybind11_path:{}".format(pybind11_path))
+        if self.log_print:
+            print("Check and re-set you path:")
+            print("pybind11_path:{}".format(pybind11_path))
 
     def _suffix(self):
         return "cpp"
@@ -746,9 +760,10 @@ m.doc() = "{doc}"; // optional module docstring
             return mod
 
         mod = quick_import(self.module_name, path=None, build=build, suffix=suffix,
-                           re_build_func=re_build_func_torch, re_build_func_kwargs={})
+                           re_build_func=re_build_func_torch, re_build_func_kwargs={}, log_print=self.log_print)
         os.chdir(self.init_path)
-        print("Move back to {}".format(self.init_path))
+        if self.log_print:
+            print("Move back to {}".format(self.init_path))
         return mod
 
 
@@ -779,7 +794,8 @@ class TorchJitInLine:
 
     """
 
-    def __init__(self, source, module_name="TORCH_EXTENSION_NAME", path=None, temps="temps", warm_start=False
+    def __init__(self, source, module_name="TORCH_EXTENSION_NAME", path=None, temps="temps", warm_start=False,
+                 log_print=True
                  ):
         """
         Add one temps dir and copy all the file to this disk to escape pollution.
@@ -797,6 +813,7 @@ class TorchJitInLine:
         warm_start:bool
             start from exist file.
         """
+        self.log_print = log_print
         self.init_path = os.getcwd()
         # check file
         if module_name == "TORCH_EXTENSION_NAME":
@@ -853,9 +870,10 @@ class TorchJitInLine:
             return mod
 
         mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix,
-                           re_build_func=re_build_func_torch, re_build_func_kwargs={})
+                           re_build_func=re_build_func_torch, re_build_func_kwargs={}, log_print=self.log_print)
         os.chdir(self.init_path)
-        print("Move back to {}".format(self.init_path))
+        if self.log_print:
+            print("Move back to {}".format(self.init_path))
         return mod
 
     def remove(self, numbers=None):
