@@ -60,8 +60,8 @@ def re_build_func(module_name=None, with_html=False):
         print("########### build end ###############".format(module_name))
 
 
-def quick_import(module_name, path=None, build=False, suffix="so", with_html=False, re_build_func=re_build_func,
-                 re_build_func_kwargs=None,log_print=False
+def quick_import(module_name, path=None, build=False, suffix=".so", with_html=False, re_build_func=re_build_func,
+                 re_build_func_kwargs=None, log_print=False
                  ):
     """
     Import .so file as module.
@@ -113,6 +113,6 @@ def quick_import(module_name, path=None, build=False, suffix="so", with_html=Fal
             print(msg.format(module_name=module_name, methods=names))
         return module
     else:
-        raise FileNotFoundError(": There is no './{}.***.{}' in '{}',\n".format(module_name, suffix, path),
+        raise FileNotFoundError(": There is no './{}.***{}' in '{}',\n".format(module_name, suffix, path),
                                 "There are just {},\n".format(os.listdir()),
                                 "Please try to build=Ture again.")

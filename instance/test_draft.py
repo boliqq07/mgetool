@@ -1,16 +1,16 @@
 import os
 
-from mgetool.draft import DraftPyx
-
-# bd = DraftPyx("./new/hello.pyx",language="c++")
+# from mgetool.draft import DraftPyx
+#
+# bd = DraftPyx("./hello.pyx",language="c++")
 # print(os.getcwd())
 # bd.write()
 # print(os.getcwd())
 # bd.quick_import(build=True, with_html=True)
 # print(os.getcwd())
-#
-# bd.remove()
 
+# bd.remove()
+#
 
 # from mgetool.draft import DraftPybind11
 #
@@ -37,17 +37,14 @@ from mgetool.draft import DraftPyx
 from mgetool.draft import TorchJitInLine
 
 source = """
-#include <torch/extension.h>
-#include <iostream>
-
+# include <torch/extension.h>
+# include <iostream>
 torch::Tensor d_sigmoid(torch::Tensor z) {
   auto s = torch::sigmoid(z);
   return (1 - s) * s;
 }
 """
-bd = TorchJitInLine(source=source)
+bd = TorchJitInLine(source=source,module_name="myjit")
 bd.write(functions=["d_sigmoid", ])
 a = bd.quick_import(build=True)
-# bd.remove()
-
-from featurebox.featurizers import *
+bd.remove()

@@ -2,6 +2,8 @@
 Quick build for pyx and cpp file.
 used for Rapid debugging.
 
+Passed only for linux !!!
+
 After build=True, the temporary files such as setup.py in local, could be re-write further.
 and select the required parts text  and add to your module main ``setup.py`` file.
 
@@ -208,7 +210,7 @@ class BaseDraft:
                         f.writelines(lines)
 
                 elif self._suffix() == "pyx":
-                    with open(self.file, "r+") as f:
+                    with open(self.file, "r+", encoding="UTF-8") as f:
                         lines = f.readlines()
                         if "language_level" in lines[0]:
                             pass
@@ -276,7 +278,7 @@ class BaseDraft:
         """
         return self._text_setup(*args, **kwargs)
 
-    def quick_import(self, build=False, suffix=".so", with_html=False):
+    def quick_import(self, build=False, suffix=None, with_html=False):
         os.chdir(self.path)
         self.build = build
         if self._suffix() != "pyx":
@@ -523,7 +525,7 @@ def main():
 
     setup(
         name='{module_name}',
-        ext_modules=cythonize('{f_pyx}',include_path=include_path,language='{language}'),)
+        ext_modules=cythonize('{f_pyx}',include_path=include_path),)
 
 if __name__ == "__main__":
     main()
@@ -538,13 +540,18 @@ if __name__ == "__main__":
         return setup_text
 
     def _text_head(self, *args, **kwargs):
-        return [
-        ]
+        if self.language=="c++":
+            return [
+            "# distutils: language = c++\n",
+            "# cython: language_level=3\n",
+            ]
+        else:
+            return []
 
 
 class DraftTorch(BaseDraft):
     """
-    Torch draft.
+    Torch draft. Passed only for linux !!!
 
     Examples:
     -----------
@@ -557,12 +564,8 @@ class DraftTorch(BaseDraft):
 
     """
 
-    def __init__(self, *args, pybind11_path=r'/home/iap13/wcx/pybind11', **kwargs):
+    def __init__(self, *args, **kwargs):
         super(DraftTorch, self).__init__(*args, **kwargs)
-        self.pybind11_path = pybind11_path
-        if self.log_print:
-            print("Check and re-set you path:")
-            print("pybind11_path:{}".format(pybind11_path))
 
     def _suffix(self):
         return "cpp"
@@ -604,13 +607,10 @@ m.doc() = "{doc}"; // optional module docstring
         return PYBIND11_MODULE
 
     def _text_head(self):
-        return ["#include <pybind11/pybind11.h>\n",
-                "#include <pybind11/stl.h>\n",
-                "namespace py = pybind11;\n"
+        return [
                 ]
 
     def text_setup(self, module_name, f_cpp):
-        pybind11_path = self.pybind11_path
 
         setup_text = """
 import warnings
@@ -618,6 +618,10 @@ warnings.filterwarnings("ignore", "Distutils was imported before Setuptools. Thi
 
 from setuptools import setup, find_packages
 from torch.utils import cpp_extension
+import platform
+
+sys_name = platform.system()
+
 
 
 class BuildExt(cpp_extension.BuildExtension):
@@ -625,18 +629,18 @@ class BuildExt(cpp_extension.BuildExtension):
         self.compiler.compiler_so.remove('-Wstrict-prototypes')
         super(BuildExt, self).build_extensions()
         
-        
-if "cpp" in "{f_cpp}":
-    b_ext = BuildExt
+if sys_name == "Linux":
+    if "cpp" in "{f_cpp}":
+        b_ext = BuildExt
+    else:
+        b_ext = cpp_extension.BuildExtension
 else:
     b_ext = cpp_extension.BuildExtension
 
 ext_modules = []
 
-# pybind11
-include_dirs = cpp_extension.include_paths()
-include_dirs.append(r'{pybind11_path}')
 
+include_dirs = cpp_extension.include_paths()
 library_paths = cpp_extension.library_paths()
 extra_link_args = []
 for i in library_paths:
@@ -669,8 +673,8 @@ def main():
               "Programming Language :: Python :: 3.8",
               "Programming Language :: Python :: 3.9",
           ],
-          include_dirs=None,
-          # include_dirs=include_dirs,
+          #include_dirs=None,
+           include_dirs=include_dirs,
           ext_modules=ext_modules)
 
 if __name__ == "__main__":
@@ -681,13 +685,13 @@ if __name__ == "__main__":
 # total:
 # python setup.py bdist_wheel
 
-            """.format(module_name=module_name, f_cpp=f_cpp, pybind11_path=pybind11_path)
+            """.format(module_name=module_name, f_cpp=f_cpp)
 
         return setup_text
 
 
 class TorchJit(BaseDraft):
-    """This type is one JIT of torch, with no setup.py file.
+    """This type is one JIT of torch, with no setup.py file.  Passed only for linux !!!
 
     Examples
     -----------
@@ -745,7 +749,7 @@ m.doc() = "{doc}"; // optional module docstring
 }}""".format(module_name=module_name, doc=doc, func_str=func_str)
         return PYBIND11_MODULE
 
-    def quick_import(self, build=False, suffix=".so", with_html=False):
+    def quick_import(self, build=False, suffix=None, with_html=False):
         os.chdir(self.path)
         self.build = build
         from torch.utils import cpp_extension
@@ -768,7 +772,7 @@ m.doc() = "{doc}"; // optional module docstring
 
 
 class TorchJitInLine:
-    """This type is one JIT of torch, with no setup.py file.
+    """This type is one JIT of torch, with no setup.py file. passed for linux.
 
     Examples
     -----------
@@ -817,7 +821,7 @@ class TorchJitInLine:
         self.init_path = os.getcwd()
         # check file
         if module_name == "TORCH_EXTENSION_NAME":
-            print("please re set your module name")
+            warnings.warn("please re set your module name",NameError)
         self.source = source
 
         if path is not None:
@@ -854,7 +858,7 @@ class TorchJitInLine:
         if len(functions) == 0:
             print("function names must be set")
 
-    def quick_import(self, build=False, suffix=".so"):
+    def quick_import(self, build=False, suffix=None):
         os.chdir(self.path)
         self.build = build
         from torch.utils import cpp_extension
