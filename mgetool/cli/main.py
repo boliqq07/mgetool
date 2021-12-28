@@ -16,8 +16,6 @@ commands_ = [
 
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
-    ('batchrun', 'mgetool.cli.batchrun'),
-    ('autoincar', 'mgetool.cli.autoincar'),
     # ('run', 'ase.cli.run'),
 
 ]
