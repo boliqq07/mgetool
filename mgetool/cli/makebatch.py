@@ -17,17 +17,12 @@ def trans_str(string):
 
 def make_batch(paths, cmd="cd $i \necho i \ncd ..", out_file_name="batch.sh"):
     batch_str = """#!/bin/bash
-echo $dirname
-
-old_path = $dirname
 
 do
 
 for i in {}
 
 {}
-
-cd old_path
 
 done
         """.format(paths, trans_str(cmd))
