@@ -49,17 +49,12 @@ done
 
 def make_batch_from_file(path_file, cmd="cd $i \necho i \ncd ..", out_file_name="batch.sh"):
     batch_str = """#!/bin/bash
-echo $dirname
-
-old_path = $dirname
 
 for i in $(cat {})
 
 do
 
 {}
-
-cd old_path
 
 done
     """.format(path_file, trans_str(cmd))
@@ -101,19 +96,22 @@ class CLICommand:
         $ python makebatch.py -p “/home/path1 /home/path2” -cmd 'cd $i \necho i \ncd ..'
 
 
-    cmd 命令用单引号。换行使用\n,并且其后不要留有空格。
+    cmd 命令用单引号。换行使用\n,并且其后不要留有空格。(-cmd 仅能在脚本中使用)
     """
 
     @staticmethod
     def add_arguments(parser):
         parser.add_argument('-f', '--path_file', help='source path file', type=str, default="paths.temp")
         parser.add_argument('-p', '--paths', help='source paths', type=str, default=None)
-        parser.add_argument('-cmd', '--command', help='command', type=str, default="cd $i \necho i \ncd ..")
+        parser.add_argument('-cmd', '--commands', help='commands', type=str, default="cd $i \necho i \ncd ..")
         parser.add_argument('-o', '--store_name', help='out file name', type=str, default="batch.sh")
 
     @staticmethod
     def run(args, parser):
-        make_batch_from_file(args.path_file, args.command, args.store_name)
+        if args.paths is None:
+            make_batch_from_file(args.path_file, args.commands, args.store_name)
+        else:
+            make_batch(args.paths, args.commands, args.store_name)
 
 
 if __name__ == '__main__':
@@ -125,10 +123,10 @@ if __name__ == '__main__':
                                                  "cmd 命令用单引号。换行使用\n,并且其后不要留有空格。")
     parser.add_argument('-f', '--path_file', help='source path file', type=str, default="paths.temp")
     parser.add_argument('-p', '--paths', help='source paths', type=str, default=None)
-    parser.add_argument('-cmd', '--command', help='command', type=str, default="cd $i \necho i \ncd ..")
+    parser.add_argument('-cmd', '--commands', help='commands', type=str, default=None)
     parser.add_argument('-o', '--store_name', help='out file name', type=str, default="batch.sh")
     args = parser.parse_args()
     if args.paths is None:
-        make_batch_from_file(args.path_file, args.command, args.store_name)
+        make_batch_from_file(args.path_file, args.commands, args.store_name)
     else:
-        make_batch(args.paths, args.command, args.store_name)
+        make_batch(args.paths, args.commands, args.store_name)
