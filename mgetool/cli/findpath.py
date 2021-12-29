@@ -22,12 +22,12 @@ def run(args, parser):
     if not args.abspath:
         absp = os.path.abspath(args.path)
         fdir = [i.replace(absp, ".") for i in fdir]
-    with open(args.out_name, mode="w") as f:
+    with open(str(args.store_name), mode="w") as f:
         fdir = "\n".join(fdir)
         f.writelines(fdir)
 
-    os.getcwd()
-    print("The paths are stored in '{}'".format(os.getcwd()))
+    print("The paths '{}' are stored in '{}'.".format(args.store_name,str(os.getcwd())))
+    print("OK")
 
 
 class CLICommand:
@@ -57,7 +57,7 @@ class CLICommand:
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
         parser.add_argument('-l', '--layer', help='dir depth, default the last layer', type=int, default=-1)
         parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
-        parser.add_argument('-o', '--out_name', help='out file name, default paths.temp', type=bool, default="paths.temp")
+        parser.add_argument('-o', '--store_name', help='out file name, default paths.temp', type=str, default="paths.temp")
 
     @staticmethod
     def run(args, parser):
@@ -80,6 +80,6 @@ if __name__ == '__main__':
     parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
     parser.add_argument('-l', '--layer', help='dir depth,default the last layer', type=int, default=-1)
     parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
-    parser.add_argument('-o', '--out_name', help='out file name,default paths.temp', type=bool, default="paths.temp")
+    parser.add_argument('-o', '--store_name', help='out file name,default paths.temp', type=str, default="paths.temp")
     args = parser.parse_args()
     run(args, parser)
