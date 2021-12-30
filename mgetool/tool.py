@@ -641,15 +641,15 @@ def get_name_without_suffix(module_name):
 
 
 def cmd_sys(d,cmd):
-    """run linux cmd"""
+    """Run linux cmd"""
     old = os.getcwd()
     os.chdir(d)
     os.system(cmd)
     os.chdir(old)
 
 
-def cmd_popen(d,cmd):
-    """run linux cmd and return result."""
+def cmd_popen(d, cmd):
+    """Run linux cmd and return result."""
     old = os.getcwd()
     os.chdir(d)
     res = os.popen(cmd).readlines()
