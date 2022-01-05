@@ -27,7 +27,6 @@ from warnings import warn
 import joblib
 import pandas as pd
 import requests
-from skimage import io
 from tqdm import tqdm
 
 from mgetool.tool import def_pwd, parallelize
@@ -52,6 +51,7 @@ class Call(object):
 
     @staticmethod
     def extension(index_col=0):
+
         read_csv = partial(pd.read_csv, index_col=index_col)
         read_excel = partial(pd.read_excel, index_col=index_col)
         extension = dict(
@@ -59,9 +59,12 @@ class Call(object):
             csv=('csv', read_csv),
             xlsx=('xlsx', read_excel),
             pkl_sk=('pkl_sk', joblib.load),
-            png=("png", io.imread),
-            jpg=("jpg", io.imread),
         )
+        try:
+            from skimage import io
+            extension.update({"png":("png", io.imread),"jpg":("jpg", io.imread)})
+        except ImportError:
+            pass
         return extension
 
     __re__ = re.compile(r'[\s\-.]')
@@ -71,7 +74,7 @@ class Call(object):
 
         Parameters
         ----------
-        paths:list
+        paths:str
             list of path
         backend:str
             default imported type to show
@@ -287,7 +290,7 @@ class BatchFile:
                 .txt
         """
 
-        path = def_pwd(path)
+        path = def_pwd(path, change=True)
         self.path = path
 
         parents = re.split(r'[\\/]', str(path))

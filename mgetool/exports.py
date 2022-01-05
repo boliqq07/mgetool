@@ -20,7 +20,7 @@ from os import remove
 import joblib
 import numpy as np
 import pandas as pd
-from skimage import io
+
 from tqdm import tqdm
 
 from mgetool.tool import def_pwd
@@ -108,7 +108,7 @@ class Store(object):
             prefix = ""
         self._prefix = prefix
 
-        def_pwd(path)
+        def_pwd(path,change=True)
 
         self._path = path
         self._filename = ""
@@ -235,6 +235,7 @@ class Store(object):
             ‘n’
         """
         self._check_name("png", file_new_name=file_new_name, mode=mode)
+        from skimage import io
         io.imsave(self._filename, data)
 
     @classmethod

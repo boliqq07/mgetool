@@ -97,7 +97,7 @@ class BaseDraft:
         self.check_suffix(self.file)
 
         if path is not None:
-            def_pwd(path)
+            def_pwd(path,change=True)
         if os.path.isfile(file):
             pass
         else:
@@ -825,7 +825,7 @@ class TorchJitInLine:
         self.source = source
 
         if path is not None:
-            def_pwd(path)
+            def_pwd(path,change=True)
 
         MODULE_DIR = Path().absolute()
         # temps:
@@ -873,9 +873,13 @@ class TorchJitInLine:
                 is_python_module=True, )
             return mod
 
-        mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix,
+        try:
+
+            mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix,
                            re_build_func=re_build_func_torch, re_build_func_kwargs={}, log_print=self.log_print)
-        os.chdir(self.init_path)
+        except  BaseException:
+            mod = None
+            os.chdir(self.init_path)
         if self.log_print:
             print("Move back to {}".format(self.init_path))
         return mod

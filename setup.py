@@ -17,7 +17,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='mgetool',
-    version='0.0.41',
+    version='0.0.43',
     keywords=["exports", "imports", "show", "tool", "newclass", "packbox", "draft"],
     description='This is an tool box contains tools for mgedata.'
                 'Some of code are non-originality, just copy for use. All the referenced code are marked,'
@@ -36,7 +36,7 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "License :: OSI Approved :: BSD 3-Clause License",
         "Natural Language :: English",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: Unix",
@@ -44,11 +44,13 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "test", "instance", "Instance"], ),
     long_description=long_description,
     long_description_content_type='text/markdown',
-    entry_points={'console_scripts': ['mgetool = mgetool.cli.main:main']}
+    entry_points={'console_scripts': ['mgetool = mgetool.cli.main:main', 'mt = mgetool.cli.main:main']}
 )

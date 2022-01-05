@@ -93,7 +93,7 @@ def quick_import(module_name, path=None, build=False, suffix=".so", with_html=Fa
         sys_name = platform.system()
         suffix = ".so" if sys_name == "Linux" else ".pyd"
 
-    def_pwd(path)
+    def_pwd(path, change=True)
     if log_print:
         print("Move to {}".format(os.getcwd()))
 

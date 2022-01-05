@@ -600,7 +600,7 @@ class TTClass(_TTClass):
             return _TTClass.__getattribute__(self, item)
 
 
-def def_pwd(path=None, change=True, verbose=False):
+def def_pwd(path=None, change=False, verbose=False):
     """try of get and define work path."""
     if path is None:
         path = os.getcwd()
