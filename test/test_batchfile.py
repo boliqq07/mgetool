@@ -7,7 +7,7 @@ import os
 name = "Ti"
 
 
-bf = BatchFile(r"/home/iap13/wcx/featurebox/Instances/Instance_wxx3/data")
+bf = BatchFile(r"../")
 os.chdir(Path(__file__).parent)
 #
 bf.filter_dir_name(include="ed_CONTCAR", layer=-2)

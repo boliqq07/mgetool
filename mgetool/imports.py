@@ -62,7 +62,7 @@ class Call(object):
         )
         try:
             from skimage import io
-            extension.update({"png":("png", io.imread),"jpg":("jpg", io.imread)})
+            extension.update({"png": ("png", io.imread), "jpg": ("jpg", io.imread)})
         except ImportError:
             pass
         return extension
@@ -277,7 +277,7 @@ class BatchFile:
 
     """
 
-    def __init__(self, path=None, suffix=None):
+    def __init__(self, path=None, suffix=None, fdir_range="all"):
         """
 
         Parameters
@@ -288,6 +288,8 @@ class BatchFile:
             suffix of file
             Examples:
                 .txt
+        fdir_range:str,tuple,list
+            dir range to find.
         """
 
         path = def_pwd(path, change=True)
@@ -296,7 +298,30 @@ class BatchFile:
         parents = re.split(r'[\\/]', str(path))
         self.parents = parents
 
-        self.file_list = check_file(path, path, suffix=suffix)
+        fm = {
+            "all": (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+            "now": (1,),
+            "next": (2,),
+            "next2": (3,),
+            "next3": (4,),
+            "to-next": (1, 2),
+            "to-next2": (1, 2, 3),
+            "to-next3": (1, 2, 3, 4),
+        }
+
+        if isinstance(fdir_range, str):
+            if fdir_range in fm:
+                fdir_range = fm[fdir_range]
+            else:
+                raise NotImplementedError("Can't accept {}".format(fdir_range))
+
+        else:
+            assert isinstance(fdir_range, (list, tuple)), "please set which layer of dir to find."
+
+        self.fdir_range = fdir_range
+
+        self.file_list_old = check_file(path, path, suffix=suffix)
+        self.file_list = [i for i in self.file_list_old if len(i[0]) in fdir_range]
         self.init_file = tuple(self.file_list)
         self.file_list_merge = []
         self.file_list_merge_new = []

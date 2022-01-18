@@ -54,6 +54,8 @@ do
 done
     """.format(path_file, trans_str(cmd))
 
+
+
     batch_str = batch_str.replace("'", "")
     batch_str = batch_str.replace("[", "")
     batch_str = batch_str.replace("]", "")
@@ -77,21 +79,19 @@ class CLICommand:
 
     Example:
 
-        $ mgetool makebatch -f paths.temp -cmd 'cd $i \necho i \ncd ..'
+        $ mgetool makebatch -f paths.temp
 
     如果复制该脚本到某处，仅运行单个脚本:
 
     Example:
 
-        $ python makebatch.py -f paths.temp -cmd 'cd $i \necho i \ncd ..'
+        $ python makebatch.py -f paths.temp
 
     若希望直接输入路径，请使用 -p 而不是 -f
 
-        $ mgetool makebatch -p “/home/path1 /home/path2” -cmd 'cd $i \necho i \ncd ..'
         $ python makebatch.py -p “/home/path1 /home/path2” -cmd 'cd $i \necho i \ncd ..'
 
-
-    cmd 命令用单引号。换行使用\n,并且其后不要留有空格。(-cmd 仅能在脚本中使用)
+    cmd 命令用单引号。换行使用\n,并且其后不要留有空格。(特殊字符 $ -cmd 仅能在脚本中使用!!!)
     """
 
     @staticmethod
