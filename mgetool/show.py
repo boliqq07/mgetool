@@ -333,7 +333,7 @@ def spilt_chinese_and_english(strings):
     return string_
 
 
-class BasePlot(object):
+class _BasePlot(object):
     """
     基础画图。
 
@@ -348,23 +348,6 @@ class BasePlot(object):
     >>> plt.show()
 
     """
-
-    def __init__(self, font="Arial", figure_size=(10, 7.5), types="single"):
-        """
-
-        Args:
-            font: (str), 字体。如：【Arial,DejaVu Sans,宋体+Times,宋体，Times】
-            figure_size:(tuple) 图片大小。
-            types:(str) 图片种类: 如：【single,long,part】
-        """
-        if types == "single":
-            setting_rcParams_single(font=font, figure_size=figure_size)
-        elif types == "long":
-            setting_rcParams_long(font=font, figure_size=figure_size)
-        elif types == "part":
-            setting_rcParams_part(font=font, figure_size=figure_size)
-        else:
-            setting_rcParams_single(font=font, figure_size=figure_size)
 
     @staticmethod
     def base_axes():
@@ -824,3 +807,54 @@ class BasePlot(object):
                 )
 
         return plt
+
+
+class QPlot(_BasePlot):
+    """
+    Quick temporary display.
+
+    >>> bp = QPlot()
+    >>> plt = bp.scatter_45_line(x, y_predict, strx='x', stry='y_predict')
+    >>> plt.show()
+    >>> plt = bp.line_scatter(y_scatter, y_lines, strx='x', stry='ys')
+    >>> plt.show()
+    >>> plt = bp.lines(ys)
+    >>> plt.show()
+    >>> plt = bp.lines(ys,x)
+    >>> plt.show()
+
+    """
+
+
+class BasePlot(_BasePlot):
+    """
+    基础画图。
+
+    >>> bp = BasePlot()
+    >>> plt = bp.scatter_45_line(x, y_predict, strx='x', stry='y_predict')
+    >>> plt.show()
+    >>> plt = bp.line_scatter(y_scatter, y_lines, strx='x', stry='ys')
+    >>> plt.show()
+    >>> plt = bp.lines(ys)
+    >>> plt.show()
+    >>> plt = bp.lines(ys,x)
+    >>> plt.show()
+
+    """
+
+    def __init__(self, font="Arial", figure_size=(10, 7.5), types="single"):
+        """
+
+        Args:
+            font: (str), 字体。如：【Arial,DejaVu Sans,宋体+Times,宋体，Times】
+            figure_size:(tuple) 图片大小。
+            types:(str) 图片种类: 如：【single,long,part】
+        """
+        if types == "single":
+            setting_rcParams_single(font=font, figure_size=figure_size)
+        elif types == "long":
+            setting_rcParams_long(font=font, figure_size=figure_size)
+        elif types == "part":
+            setting_rcParams_part(font=font, figure_size=figure_size)
+        else:
+            setting_rcParams_single(font=font, figure_size=figure_size)
