@@ -640,7 +640,7 @@ def get_name_without_suffix(module_name):
     return module_name
 
 
-def cmd_sys(d,cmd):
+def cmd_sys(d, cmd):
     """Run linux cmd"""
     old = os.getcwd()
     os.chdir(d)

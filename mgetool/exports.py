@@ -108,7 +108,7 @@ class Store(object):
             prefix = ""
         self._prefix = prefix
 
-        def_pwd(path,change=True)
+        def_pwd(path, change=True)
 
         self._path = path
         self._filename = ""

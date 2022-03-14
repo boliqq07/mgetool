@@ -10,6 +10,7 @@ from mgetool.tool import tt
 pyximport.install()
 import magic
 import magic2
+
 a = magic.A()
 b = magic2.A()
 

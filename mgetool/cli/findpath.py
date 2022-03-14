@@ -26,7 +26,7 @@ def run(args, parser):
         fdir = "\n".join(fdir)
         f.writelines(fdir)
 
-    print("The paths '{}' are stored in '{}'.".format(args.store_name,str(os.getcwd())))
+    print("The paths '{}' are stored in '{}'.".format(args.store_name, str(os.getcwd())))
     print("OK")
 
 
@@ -57,11 +57,12 @@ class CLICommand:
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
         parser.add_argument('-l', '--layer', help='dir depth, default the last layer', type=int, default=-1)
         parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
-        parser.add_argument('-o', '--store_name', help='out file name, default paths.temp', type=str, default="paths.temp")
+        parser.add_argument('-o', '--store_name', help='out file name, default paths.temp', type=str,
+                            default="paths.temp")
 
     @staticmethod
     def run(args, parser):
-        run(args,parser)
+        run(args, parser)
 
 
 if __name__ == '__main__':
@@ -70,7 +71,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="根据路径文件，寻找所有符合要求的文件子路径："
                                                  "python findpath.py -p /home/dir_name -if POSCAR"
-                                                 )
+                                     )
 
     parser.add_argument('-p', '--path', help='source path', type=str, default=".")
     parser.add_argument('-s', '--suffix', help='suffix of file', type=str, default=None)

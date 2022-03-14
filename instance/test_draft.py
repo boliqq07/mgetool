@@ -44,7 +44,7 @@ torch::Tensor d_sigmoid(torch::Tensor z) {
   return (1 - s) * s;
 }
 """
-bd = TorchJitInLine(source=source,module_name="myjit")
+bd = TorchJitInLine(source=source, module_name="myjit")
 bd.write(functions=["d_sigmoid", ])
 a = bd.quick_import(build=True)
 bd.remove()

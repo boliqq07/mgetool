@@ -361,7 +361,7 @@ class _BasePlot(object):
         return plt
 
     @staticmethod
-    def scatter(x, y, strx='x', stry='y_predict', line_45=False,color="orange"):
+    def scatter(x, y, strx='x', stry='y_predict', line_45=False, color="orange"):
         """
         散点图
         """
@@ -729,7 +729,6 @@ class _BasePlot(object):
         binary_distance[indexs[:, 1], indexs[:, 0]] = t
         return binary_distance
 
-
     def distance(self, node_color, edge_color_pen=0.7, binary_distance=None, print_noise=0.001,
                  node_name=None, highlight=None):
         """
@@ -776,7 +775,7 @@ class _BasePlot(object):
             lab = {i: i for i in range(le)}
 
         elif node_name is False:
-            lab=None
+            lab = None
 
         else:
             assert binary_distance.shape[0]

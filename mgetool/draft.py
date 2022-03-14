@@ -97,7 +97,7 @@ class BaseDraft:
         self.check_suffix(self.file)
 
         if path is not None:
-            def_pwd(path,change=True)
+            def_pwd(path, change=True)
         if os.path.isfile(file):
             pass
         else:
@@ -540,10 +540,10 @@ if __name__ == "__main__":
         return setup_text
 
     def _text_head(self, *args, **kwargs):
-        if self.language=="c++":
+        if self.language == "c++":
             return [
-            "# distutils: language = c++\n",
-            "# cython: language_level=3\n",
+                "# distutils: language = c++\n",
+                "# cython: language_level=3\n",
             ]
         else:
             return []
@@ -608,10 +608,9 @@ m.doc() = "{doc}"; // optional module docstring
 
     def _text_head(self):
         return [
-                ]
+        ]
 
     def text_setup(self, module_name, f_cpp):
-
         setup_text = """
 import warnings
 warnings.filterwarnings("ignore", "Distutils was imported before Setuptools. This usage is discouraged and may exhibit undesirable behaviors or errors. Please use Setuptools' objects directly or at least import Setuptools first.",  UserWarning, "setuptools.distutils_patch")
@@ -821,11 +820,11 @@ class TorchJitInLine:
         self.init_path = os.getcwd()
         # check file
         if module_name == "TORCH_EXTENSION_NAME":
-            warnings.warn("please re set your module name",NameError)
+            warnings.warn("please re set your module name", NameError)
         self.source = source
 
         if path is not None:
-            def_pwd(path,change=True)
+            def_pwd(path, change=True)
 
         MODULE_DIR = Path().absolute()
         # temps:
@@ -876,7 +875,7 @@ class TorchJitInLine:
         try:
 
             mod = quick_import(self.module_name, path=self.path, build=build, suffix=suffix,
-                           re_build_func=re_build_func_torch, re_build_func_kwargs={}, log_print=self.log_print)
+                               re_build_func=re_build_func_torch, re_build_func_kwargs={}, log_print=self.log_print)
         except  BaseException:
             mod = None
             os.chdir(self.init_path)

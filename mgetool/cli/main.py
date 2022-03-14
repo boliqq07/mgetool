@@ -22,7 +22,6 @@ commands_ = [
 
 
 def main(prog='mgetool', description='mgetool command line tool.', args=None):
-
     commands = commands_
     parser = argparse.ArgumentParser(prog=prog,
                                      description=description,

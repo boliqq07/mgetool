@@ -332,10 +332,10 @@ class BatchFile:
 
         Parameters
         ----------
-        include:str
+        include:str,list
             get the filename with include str
             such as hold "ast_tep" with "ast" string
-        exclude: str
+        exclude: str,list
             delete the filename with exclude str
             such as hold "ast_cap" and delete "ast_tep" with "tep" str,
 

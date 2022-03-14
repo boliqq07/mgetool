@@ -15,46 +15,35 @@ def trans_str(string):
     return lines
 
 
-def make_batch(paths, cmd="cd $i \necho i \ncd ..", out_file_name="batch.sh"):
-    batch_str = """#!/bin/bash
-
-do
-
-for i in {}
-
-{}
-
-done
-        """.format(paths, trans_str(cmd))
-
-    batch_str = batch_str.replace("'", "")
-    batch_str = batch_str.replace("[", "")
-    batch_str = batch_str.replace("]", "")
-    batch_str = batch_str.replace(",", "")
-    dirs = os.path.join(os.path.expanduser("~"),"tmp")
-    if not os.path.isdir(dirs):
-        os.mkdir(dirs)
-    os.chdir(dirs)
-
-    bach = open(out_file_name, "w")
-    bach.write(batch_str)
-    bach.close()
-    print("The batch file '{}' is stored in '{}'".format(out_file_name, os.getcwd()))
-
-
-def make_batch_from_file(path_file, cmd="cd $i \necho i \ncd ..", out_file_name="batch.sh"):
-    batch_str = """#!/bin/bash
+def make_batch_from_file(path_file, cmd="", out_file_name="batch.sh",enter=True):
+    if not enter:
+        batch_str = """#!/bin/bash
 
 for i in $(cat {})
 
 do
+echo $i
 
 {}
 
 done
-    """.format(path_file, trans_str(cmd))
+        """.format(path_file, trans_str(cmd))
+    else:
+        batch_str = """#!/bin/bash
 
+old_path=$(cd "$(dirname "$0")"; pwd)
 
+for i in $(cat {})
+
+do
+cd $i
+echo $(cd "$(dirname "$0")"; pwd)
+
+{}
+
+cd $old_path
+done
+        """.format(path_file, trans_str(cmd))
 
     batch_str = batch_str.replace("'", "")
     batch_str = batch_str.replace("[", "")
@@ -81,15 +70,17 @@ class CLICommand:
 
         $ mgetool makebatch -f paths.temp
 
+        $ mgetool makebatch -cmd 'jsub < $(find -name *.run)'
+
+    此处为单引号！
+
     如果复制该脚本到某处，仅运行单个脚本:
 
     Example:
 
         $ python makebatch.py -f paths.temp
 
-    若希望直接输入路径，请使用 -p 而不是 -f
-
-        $ python makebatch.py -p “/home/path1 /home/path2” -cmd 'cd $i \necho i \ncd ..'
+        $ python makebatch.py  -cmd 'cd $i \necho i \ncd ..'
 
     cmd 命令用单引号。换行使用\n,并且其后不要留有空格。(特殊字符 $ -cmd 仅能在脚本中使用!!!)
     """
@@ -97,16 +88,13 @@ class CLICommand:
     @staticmethod
     def add_arguments(parser):
         parser.add_argument('-f', '--path_file', help='source path file', type=str, default="paths.temp")
-        parser.add_argument('-p', '--paths', help='source paths', type=str, default=None)
-        parser.add_argument('-cmd', '--commands', help='commands', type=str, default="cd $i \necho i \ncd ..")
+        parser.add_argument('-cmd', '--commands', help='commands', type=str, default="")
+        parser.add_argument('-enter', '--enter', help='enter the disk', type=bool, default=True)
         parser.add_argument('-o', '--store_name', help='out file name', type=str, default="batch.sh")
 
     @staticmethod
     def run(args, parser):
-        if args.paths is None:
-            make_batch_from_file(args.path_file, args.commands, args.store_name)
-        else:
-            make_batch(args.paths, args.commands, args.store_name)
+        make_batch_from_file(args.path_file, args.commands, args.store_name, args.enter)
 
 
 if __name__ == '__main__':
@@ -117,11 +105,10 @@ if __name__ == '__main__':
                                                  "python makebatch.py -cmd 'cd $i \necho i \ncd ..'  "
                                                  "cmd 命令用单引号。换行使用\n,并且其后不要留有空格。")
     parser.add_argument('-f', '--path_file', help='source path file', type=str, default="paths.temp")
-    parser.add_argument('-p', '--paths', help='source paths', type=str, default=None)
-    parser.add_argument('-cmd', '--commands', help='commands', type=str, default=None)
+    parser.add_argument('-cmd', '--commands', help='commands', type=str, default="")
+    parser.add_argument('-enter', '--enter', help='enter the disk', type=bool, default=True)
     parser.add_argument('-o', '--store_name', help='out file name', type=str, default="batch.sh")
     args = parser.parse_args()
-    if args.paths is None:
-        make_batch_from_file(args.path_file, args.commands, args.store_name)
-    else:
-        make_batch(args.paths, args.commands, args.store_name)
+
+    make_batch_from_file(args.path_file, args.commands, args.store_name, args.enter)
+
