@@ -12,7 +12,41 @@ from mgetool.imports import BatchFile
 def run(args, parser):
     # args = args.parse_args()
     bf = BatchFile(args.path, suffix=args.suffix)
-    bf.filter_dir_name(include=args.dir_include, exclude=args.dir_exclude, layer=args.layer)
+    if " " in args.layer:
+        layer = str(args.layer).split(" ")
+        layer = [int(i) for i in layer]
+        if len(layer)==1:
+            layer = layer[0]
+    else:
+        layer = int(args.layer)
+
+    if args.dir_include is not None and " " in args.dir_include:
+        dir_include = str(args.dir_include).split(" ")
+    else:
+        dir_include = args.dir_include
+
+    if args.dir_exclude is not None and " " in args.dir_exclude:
+        dir_exclude = str(args.dir_exclude).split(" ")
+    else:
+        dir_exclude = args.dir_exclude
+
+    if isinstance(layer, int):
+        bf.filter_dir_name(include=dir_include, exclude=dir_exclude, layer=layer)
+    else:
+        if dir_include is not None and len(dir_include)==len(layer):
+            for di,la in zip(dir_include, layer):
+                if di !="-":
+                    bf.filter_dir_name(include=di, layer=la)
+        else:
+            bf.filter_dir_name(include=dir_include, layer=layer)
+
+        if dir_exclude is not None and len(dir_exclude)==len(layer):
+            for di,la in zip(dir_exclude, layer):
+                if di !="-":
+                    bf.filter_dir_name(exclude=di, layer=la)
+        else:
+            bf.filter_dir_name(exclude=dir_exclude, layer=layer)
+
     bf.filter_file_name(include=args.file_include, exclude=args.file_exclude)
     bf.merge()
 
@@ -40,6 +74,13 @@ class CLICommand:
 
         $ mgetool findpath -p /home/dir_name -if POSCAR
 
+        $ mgetool findpath  -id my_dir1 -ed my_dir2
+
+    指定每层条件，使用单引号，保证每层个数一致，使用空格分割，使用 - 代表跳过。
+    如下式代表最后一层需要是 ini_opt ，最后第三层不能是 Na .
+
+        mgetool findpath -id '- - ini_opt' -ed 'Na - -' -l '-3 -2 -1'
+
     如果复制该脚本到某处，仅运行单个脚本:
 
     Example:
@@ -55,7 +96,7 @@ class CLICommand:
         parser.add_argument('-ef', '--file_exclude', help='exclude file name.', type=str, default=None)
         parser.add_argument('-id', '--dir_include', help='include dir name.', type=str, default=None)
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
-        parser.add_argument('-l', '--layer', help='dir depth, default the last layer', type=int, default=-1)
+        parser.add_argument('-l', '--layer', help='dir depth,default the last layer', type=str, default="-1")
         parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
         parser.add_argument('-o', '--store_name', help='out file name, default paths.temp', type=str,
                             default="paths.temp")
@@ -79,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('-ef', '--file_exclude', help='exclude file name.', type=str, default=None)
     parser.add_argument('-id', '--dir_include', help='include dir name.', type=str, default=None)
     parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
-    parser.add_argument('-l', '--layer', help='dir depth,default the last layer', type=int, default=-1)
+    parser.add_argument('-l', '--layer', help='dir depth,default the last layer', type=str, default="-1")
     parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
     parser.add_argument('-o', '--store_name', help='out file name,default paths.temp', type=str, default="paths.temp")
     args = parser.parse_args()
