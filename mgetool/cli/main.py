@@ -16,7 +16,7 @@ commands_ = [
 
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
-    ('makebatch', 'mgetool.cli.cpbatch'),
+    ('cpbatch', 'mgetool.cli.cpbatch'),
     # ('run', 'ase.cli.run'),
 
 ]
