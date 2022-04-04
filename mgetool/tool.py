@@ -715,6 +715,20 @@ def coarse_and_spilt_array(array: np.ndarray, tol: float = 0.5, method: str = No
 
         return labels
 
+
+def dos2unix(file, out_file=None):
+    """
+    Args:
+        file: (str,) input file name
+        out_file: (str,) input file name, if None, cover the input.
+    """
+    with open(file, 'rb') as infile:
+        content = infile.read()
+    out_file = file if out_file is None else out_file
+    with open(out_file, 'wb') as output:
+        for line in content.splitlines():
+            output.write(line + b'\n')
+
 if __name__ == "__main__":
     # def func(n, _=None):
     #     # time.sleep(0.0001)
