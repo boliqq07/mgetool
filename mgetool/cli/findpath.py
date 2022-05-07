@@ -11,6 +11,8 @@ from mgetool.imports import BatchFile
 
 def run(args, parser):
     # args = args.parse_args()
+    if not os.path.isabs(args.path):
+        args.path = os.path.abspath(args.path)
     bf = BatchFile(args.path, suffix=args.suffix)
     if " " in args.layer:
         layer = str(args.layer).split(" ")
