@@ -18,8 +18,8 @@ def import_module_from_library(module_name, path, is_python_module):
             torch.ops.load_library(path)
 
 
-def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix="so", temps="temps",
-                   functions=("funcs",)):
+def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix=None, temps="temps",
+                   functions=["funcs",]):
     """
     torch.utils.cpp_extension.load, just jump build if exist.
 
@@ -33,7 +33,7 @@ def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix="
         name of module
     suffix:str
         module file type.
-    functions:str
+    functions:str,tuple
         name of function in cpp.
     """
     name = module_name
@@ -95,6 +95,7 @@ def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix="
 if __name__ == '__main__':
     a = inline_c_torch(module_name="segment_method", source_cpp="../inst/speedup_torch.cpp",
                        functions=["d_sigmoid"])
+
     # inputs = torch.tensor([1.2, 3, 4, 5, 6, 0.7, 9], requires_grad=True, device="cpu")
     # node_bond_idx = [torch.tensor([1, 2, 3]), torch.tensor([4, 5, 6])]
     # b = mod.merge_idx(inputs, node_bond_idx, "mean")
