@@ -51,13 +51,31 @@ Examples
 """
 
 import os
+import re
 import shutil
 import warnings
 from abc import abstractmethod
 from pathlib import Path
 
 from mgetool.quick_import import quick_import
-from mgetool.tool import def_pwd, get_name_without_suffix
+from mgetool.tool import def_pwd
+
+
+def get_name_without_suffix(module_name):
+    """Get the name without suffix."""
+    if "-" in module_name:
+        print("'-' in '{}' is replaced by '_'".format(module_name))
+    module_name = module_name.replace("-", "_")
+
+    module_fc = re.compile(r"\W")
+    module_fc = module_fc.findall(module_name)
+    if module_fc[0] == "." and len(module_fc) == 1:
+        module_name = module_name.split(".")[0]
+    else:
+        module_fc.remove(".")
+        raise NameError("The string {} in module_name is special character.".format(module_fc))
+    print("Confirm the model name: {}".format(module_name))
+    return module_name
 
 
 class BaseDraft:

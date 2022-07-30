@@ -8,7 +8,7 @@
 
 """
 Notes:
-    Some tools for characterization
+    Some tools for characterization.
 """
 import inspect
 import multiprocessing
@@ -66,8 +66,7 @@ def time_this_function(func):
 
 def check_random_state(seed):
     """
-    Turn seed into a random.RandomState instance.
-    if use the numpy random, please user the check_random_state in sklearn.
+    Turn seed into a random.RandomState instance. If use the numpy random, please user the check_random_state in sklearn.
 
     Parameters
     ----------
@@ -97,7 +96,6 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
                 parallel_para_dict=None, respective_kwargs=False,
                 **kwargs):
     """
-
     Parallelize the function for iterable.
 
     Examples
@@ -361,7 +359,6 @@ def parallelize_imap(n_jobs, func, iterable, tq=True):
 
 
 def parallelize_parameter(func, iterable, respective=False, **kwargs):
-    """Decrease your output size of your function"""
     import multiprocessing
     maxx = multiprocessing.cpu_count()
     n_jobs = maxx - 2
@@ -400,8 +397,8 @@ def parallelize_parameter(func, iterable, respective=False, **kwargs):
 
 def logg(func, printing=True, back=False):
     """
-    Get the name of function
-    use as a decorator
+    Get the name of function.
+    use as a decorator:@
 
     Parameters
     ----------
@@ -446,7 +443,7 @@ def logg(func, printing=True, back=False):
 
 def name_to_name(*iters, search, search_which=1, return_which=(1,), two_layer=False):
     """
-    search and rank the list.
+    Search and rank the list.
 
     Parameters
     ----------
@@ -571,11 +568,11 @@ class _TTClass(dict):
 
 class TTClass(_TTClass):
     """
-    quick time.
-    use tt object.
+    Quick time. Don't use this class use 'tt' object.
 
     Examples:
     -----------
+    >>> from mgetool.tool import tt
     >>> tt.t
     >>> a=4
     >>> tt.t
@@ -622,23 +619,6 @@ def def_pwd(path=None, change=False, verbose=False):
         print("checked path:", path)
     locals()[pwd] = pwd
     return path
-
-
-def get_name_without_suffix(module_name):
-    """Get the name without suffix."""
-    if "-" in module_name:
-        print("'-' in '{}' is replaced by '_'".format(module_name))
-    module_name = module_name.replace("-", "_")
-
-    module_fc = re.compile(r"\W")
-    module_fc = module_fc.findall(module_name)
-    if module_fc[0] == "." and len(module_fc) == 1:
-        module_name = module_name.split(".")[0]
-    else:
-        module_fc.remove(".")
-        raise NameError("The string {} in module_name is special character.".format(module_fc))
-    print("Confirm the model name: {}".format(module_name))
-    return module_name
 
 
 def cmd_sys(d, cmd):
@@ -718,6 +698,7 @@ def coarse_and_spilt_array(array: np.ndarray, tol: float = 0.5, method: str = No
 
 def dos2unix(file, out_file=None):
     """
+
     Args:
         file: (str,) input file name
         out_file: (str,) input file name, if None, cover the input.

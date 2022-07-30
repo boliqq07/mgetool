@@ -14,3 +14,4 @@ requests~=2.24.0
 six~=1.14.0
 mgetool~=0.0.10
 scikit-image~=0.16.2
+path

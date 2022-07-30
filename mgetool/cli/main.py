@@ -16,8 +16,6 @@ commands_ = [
 
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
-    ('cpbatch', 'mgetool.cli.cpbatch'),
-    # ('run', 'ase.cli.run'),
 
 ]
 
@@ -102,18 +100,21 @@ class Formatter(argparse.HelpFormatter):
         out = ''
         blocks = text.split('\n\n')
         for block in blocks:
-            if block[0] == '*':
-                # List items:
-                for item in block[2:].split('\n* '):
-                    out += textwrap.fill(item,
-                                         width=width - 2,
-                                         initial_indent='* ',
-                                         subsequent_indent='  ') + '\n'
-            elif block[0] == ' ':
-                # Indented literal block:
-                out += block + '\n'
+            if block != "":
+                if block[0] == '*':
+                    # List items:
+                    for item in block[2:].split('\n* '):
+                        out += textwrap.fill(item,
+                                             width=width - 2,
+                                             initial_indent='* ',
+                                             subsequent_indent='  ') + '\n'
+                elif block[0] == ' ':
+                    # Indented literal block:
+                    out += block + '\n'
+                else:
+                    # Block of text:
+                    out += textwrap.fill(block, width=width) + '\n'
+                out += '\n'
             else:
-                # Block of text:
-                out += textwrap.fill(block, width=width) + '\n'
-            out += '\n'
+                pass
         return out[:-1]

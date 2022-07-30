@@ -15,7 +15,7 @@ def trans_str(string):
     return lines
 
 
-def make_batch_from_file(path_file, cmd="", out_file_name="batch.sh",enter=True):
+def make_batch_from_file(path_file, cmd="", out_file_name="batch.sh", enter=True):
     if not enter:
         batch_str = """#!/bin/bash
 
@@ -55,7 +55,7 @@ done
     bach = open(out_file_name, "w")
     bach.write(batch_str)
     bach.close()
-    print("The batch file '{}' is stored in '{}'".format(out_file_name, os.getcwd()))
+    print("The batch file '{}' is stored in '{}' .".format(out_file_name, os.getcwd()))
 
 
 class CLICommand:
@@ -102,8 +102,8 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="根据路径文件，创建循环命令："
-                                                 "python makebatch.py -cmd 'cd $i \necho i \ncd ..'  "
-                                                 "cmd 命令用单引号。换行使用\n,并且其后不要留有空格。")
+                                                 "python makebatch.py -cmd 'run xxx \nrun xxx2' "
+                                                 "cmd 命令用单引号,换行使用\n,并且其后不要留有空格。")
     parser.add_argument('-f', '--path_file', help='source path file', type=str, default="paths.temp")
     parser.add_argument('-cmd', '--commands', help='commands', type=str, default="")
     parser.add_argument('-enter', '--enter', help='enter the disk', type=bool, default=True)

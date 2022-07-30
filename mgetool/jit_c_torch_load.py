@@ -1,4 +1,4 @@
-"""This is one reserved script, Copy it to your module for use."""
+"""This is one reserved script, copy it to your module for use."""
 import imp
 import os
 import platform
@@ -19,7 +19,7 @@ def import_module_from_library(module_name, path, is_python_module):
 
 
 def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix=None, temps="temps",
-                   functions=["funcs",]):
+                   functions=None):
     """
     torch.utils.cpp_extension.load, just jump build if exist.
 
@@ -36,6 +36,8 @@ def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix=N
     functions:str,tuple
         name of function in cpp.
     """
+    if functions is None:
+        functions = ["funcs", ]
     name = module_name
 
     if platform.system() == "Windows":
@@ -64,8 +66,7 @@ def inline_c_torch(module_name="segment_method", source_cpp="inst.cpp", suffix=N
                 pass
             else:
                 if functions is not None:
-                    module_def = [" ", ]
-                    module_def.append('PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {')
+                    module_def = [" ", 'PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {']
                     if isinstance(functions, str):
                         functions = [functions]
                     if isinstance(functions, list):

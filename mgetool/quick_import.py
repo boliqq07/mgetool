@@ -68,6 +68,8 @@ def quick_import(module_name, path=None, build=False, suffix=".so", with_html=Fa
 
     Parameters
     ----------
+    log_print:bool
+        print.
     re_build_func_kwargs:dict
         kwargs for build func
     re_build_func:callable

@@ -9,13 +9,12 @@
 
 """
 Notes:
-    Export data simply.
+    Export data easily.
 
 """
 
 import os
 import sys
-from os import remove
 
 import joblib
 import numpy as np
@@ -30,7 +29,7 @@ class Store(object):
     """
     Store file to path.
 
-    Default mode is "w" ,which can be "a+" in txt.
+    Default mode is "w". (default "a+" in txt)
 
     'w' :
         create a new file, open for writing, clear contents if it exists.
@@ -53,11 +52,12 @@ class Store(object):
 
     Example2:
     ----------
-    Catch the printed to txt.
+    Catch the printed to txt. use ``start`` and ``end`` functions.
 
     >>> from mgetool.exports import Store
     >>> st =  Store()
     >>> st.start()
+
     >>> print(os.path.dirname(__file__))
     >>> print('------------------')
     >>> for i in tqdm(range(5, 10)):
@@ -68,7 +68,7 @@ class Store(object):
 
     Example2:
     ----------
-    Catch the printed to txt.
+    Delete the stored files in code.
 
     >>> from mgetool.exports import Store
     >>> st =  Store()
@@ -140,6 +140,7 @@ class Store(object):
 
     def to_csv(self, data, file_new_name=None, mode="w", transposition=False):
         """
+
         Parameters
         ----------
         data: object
@@ -172,6 +173,7 @@ class Store(object):
 
     def to_txt(self, data, file_new_name=None, mode="w"):
         """
+
         Parameters
         ----------
         data: object
@@ -292,19 +294,19 @@ class Store(object):
                 raise IndexError("No flie or wrong index to remove")
             else:
                 if not isinstance(files, list):
-                    remove(str(files))
+                    os.remove(str(files))
                 else:
                     for f in files:
-                        remove(str(f))
+                        os.remove(str(f))
                 del self._file_list[index]
 
         elif name in self._file_list:
             if not isinstance(name, list):
-                remove(str(name))
+                os.remove(str(name))
                 self._file_list.remove(name)
             else:
                 for f in name:
-                    remove(str(f))
+                    os.remove(str(f))
                     self._file_list.remove(f)
                 self._file_list.remove([])
 
@@ -317,7 +319,7 @@ class Store(object):
         """
         files = self._file_list
         for f in files:
-            remove(str(f))
+            os.remove(str(f))
         self._file_list = []
         self._filename = ""
 
@@ -345,7 +347,7 @@ class Store(object):
         if mode == "n":
             mode = "w"
 
-        sys.stdout = Logger(self._filename, mode=mode)
+        sys.stdout = _Logger(self._filename, mode=mode)
 
     @staticmethod
     def end():
@@ -358,10 +360,11 @@ class Store(object):
             pass
 
 
-class Logger(object):
+class _Logger(object):
     def __init__(self, filename="Default.log", mode="a+"):
         self.terminal = sys.stdout
         self.log = open(filename, mode)
+        print(f"{filename} are stored {os.getcwd()}.")
 
     def write(self, message):
         self.terminal.write(message)

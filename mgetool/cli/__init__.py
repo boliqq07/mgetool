@@ -4,4 +4,4 @@
 # @Software : PyCharm
 # @License  : GNU General Public License v3.0
 # @Author   : xxx
-__all__ = ["findpath", "main", "makebatch", "cpbatch"]
+__all__ = ["findpath", "main", "makebatch", ]
