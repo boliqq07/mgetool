@@ -170,10 +170,12 @@ class BatchFileMatch:
             if include:
                 if "*" not in include and "|" not in include and "?" not in include:  # 简单模式
                     self.file_list = [self.file_list[r] for r, i in enumerate(files) if include in i]
+                    files = [i for i in files if include in i]
                 else:
                     pt = self._comp(include)
                     index = [r for r, i in enumerate(files) if re.search(pt, i) is not None]
                     self.file_list = [self.file_list[r] for r in index]
+                    files = [files[r] for r in index]
 
             exclude = self._get_patten(exclude)
             if exclude:
@@ -234,10 +236,13 @@ class BatchFileMatch:
             if include:
                 if "*" not in include and "|" not in include and "?" not in include and "/" not in include:  # 简单模式
                     self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if include in i]
+                    file_dir = [i for i in file_dir if include in i]
                 else:
                     pt = self._comp(include)
                     index = [r for r, i in enumerate(file_dir) if re.search(pt, i) is not None]
                     self.file_list = [self.file_list[r] for r in index]
+                    file_dir = [file_dir[r] for r in index]
+
             exclude = self._get_patten(exclude)
             if exclude:
                 if "*" not in exclude and "|" not in exclude and "?" not in exclude and "/" not in exclude:  # 简单模式
@@ -367,3 +372,12 @@ class BatchFileMatch:
         dirs =  [dirs[n] for n,i in enumerate(index) if i == 0]
         return [Path(".") if i == "$WORKPATH" else i for i in dirs]
 
+
+# if __name__=="__main__":
+#     bfm = BatchFileMatch(r"C:\Users\Administrator\PycharmProjects\samples\Instance\Instance_mo2co2\MoCMo-O-4")
+#
+#     bfm.filter_dir_name(exclude="Re|Co",include="pure_static",layer=0)
+#
+#     print(bfm.file_list)
+#     bfm.merge()
+#     print(bfm.file_dir)
