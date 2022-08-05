@@ -8,35 +8,59 @@ import os
 import re
 import shutil
 import warnings
+from fnmatch import translate
 from typing import Union, List
 
 from path import Path
 
-# simple_patten >>>>> （for simple_match）
+# patten >>>>>
 shell_patten_help = """
-*       匹配任意字符
-?       匹配任意单个字符
-[seq]   用来表示一组字符,单独列出：[amk] 匹配 'a'，'m'或'k'
-[!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符。
+#(通配符字符串,使用''包裹,如'*.ext').
+*       匹配任意字符.
+?       匹配任意单个字符.
+[seq]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
+[!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.
 """
 
-
-# patten >>>>> （for include,exclude,match）
+# patten >>>>>
 re_patten_help = """
-# .	匹配任意字符，除了换行符
-# re*	匹配0个或多个的表达式。
-# re+	匹配1个或多个的表达式。
-# re?	匹配0个或1个由前面的正则表达式定义的片段，非贪婪方式
-# a| b	匹配a或b
-# [...]	用来表示一组字符,单独列出：[amk] 匹配 'a'，'m'或'k'
-# [^...]	不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符。
-# \w	匹配字母数字及下划线
-# \W	匹配非字母数字及下划线
-# \s	匹配任意空白字符，等价于 [ \t\n\r\f]。
-# \S	匹配任意非空字符
-# \d	匹配任意数字，等价于 [0-9].
-# \D	匹配任意非数字
+#(通配符字符串,使用''包裹,如'.*.ext')
+# .	匹配任意字符,除了换行符.
+# re*	匹配0个或多个的表达式.
+# re+	匹配1个或多个的表达式.
+# re?	匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
+# a|b	匹配a或b.
+# [...]	用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
+# [^...]	不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.
+# \w	匹配字母数字及下划线.
+# \W	匹配非字母数字及下划线.
+# \s	匹配任意空白字符.
+# \S	匹配任意非空字符.
+# \d	匹配任意数字,等价于 [0-9].
+# \D	匹配任意非数字.
 """
+
+
+def shell_to_re_compile_pattern(pat, trans=True):
+    """shell to re patten."""
+    try:
+        if trans:
+            res = translate(pat)
+        else:
+            res = pat
+        return re.compile(res)
+    except BaseException as e:
+        print("-------------------------\n"
+              "1. If trans==False (-t False) >>> ``re laws``\n"
+              "----re module help-------")
+        print(re_patten_help)
+        print("More: https://docs.python.org/3/library/re.html?highlight=re#module-re\n\n"
+              "-------------------------\n"
+              "2. If trans==True (-t True) >>> ``linux shell laws``\n"
+              "---shell module help-----")
+        print(shell_patten_help)
+        print("------------------------\n")
+        raise e
 
 
 class BatchFileMatch:
@@ -59,7 +83,7 @@ class BatchFileMatch:
     ...
     """
 
-    def __init__(self, path=".", suffix=None, simple_patten=None):
+    def __init__(self, path=".", suffix=None, patten=None, trans=True):
         """
 
         Parameters
@@ -70,18 +94,19 @@ class BatchFileMatch:
             suffix of file.
             Examples:
                 .txt
-        simple_patten:str
-            simple patten for match just following:
-            *       matches everything
-            ?       matches any single character
-            [seq]   matches any character in seq
-            [!seq]  matches any char not in seq
+        patten:str
+            match patten.
+        trans: bool, default True
+            If true, use shell patten to match.
+            If False, use re patten to match.
         """
+        self.trans=trans
 
         self.path = Path(path)
-        if simple_patten is not None:
+        if patten is not None:
 
-            self.file_list = list(self.path.walkfiles(match=simple_patten))
+            file_list = self.path.walkfiles()
+            self.file_list = list(self.filter(file_list, pat=patten, trans=self.trans))
 
         else:
             if suffix is not None:
@@ -97,8 +122,27 @@ class BatchFileMatch:
         self.file_dir = []
         self._rm_check = 0
 
+
     def __repr__(self):
         return f"Root: {self.path}"
+
+    def _comp(self, pat):
+        return shell_to_re_compile_pattern(pat, trans=self.trans)
+
+    @staticmethod
+    def filter(names, pat, trans=True):
+        smatch = shell_to_re_compile_pattern(pat, trans=trans).search
+        return [ni for ni in names if smatch(ni) is not None]
+
+    @staticmethod
+    def searchcase(name, pat, trans=True):
+        smatch = shell_to_re_compile_pattern(pat, trans=trans).search
+        return smatch(name) is not None
+
+    @staticmethod
+    def matchcase(name, pat, trans=True):
+        smatch = shell_to_re_compile_pattern(pat, trans=trans).match
+        return smatch(name) is not None
 
     @staticmethod
     def _get_patten(my_strs):
@@ -109,44 +153,14 @@ class BatchFileMatch:
                 my_strs = my_strs[0]
             else:
                 raise NotImplementedError
-        elif isinstance(my_strs, str):
-            pass
         else:
             pass
         return my_strs
 
-    def _comp(self, patten):
-        try:
-            return re.compile(patten)
-        except BaseException as e:
-
-            print("-------------------------\n"
-            "1. '-id','-ed','if','ef', 'include', 'exclude' obey >>> ``re laws``\n"
-            "----re module help-------")
-            print(re_patten_help)
-            print("More: https://docs.python.org/3/library/re.html?highlight=re#module-re\n\n"
-            "-------------------------\n"
-            "2. '-m','simple_patten'                        obey >>> ``linux shell laws``\n"
-            "---shell module help-----")
-            print(shell_patten_help)
-            print("------------------------\n")
-            raise e
-
-    def match(self, patten: str = None):
-        """
-        More powerful match in 're'.
-        
-        Parameters
-        ----------
-        patten: str
-            Patten for match, such as ‘*’,‘^’,'.' in ‘re’ module.
-        """
-        pt = self._comp(patten)
-        self.file_list = [i for i in self.file_list if re.search(pt, i) is not None]
-
     def filter_file_name(self, include: Union[List[str], str] = None, exclude: Union[List[str], str] = None,
                          patten: str = None):
         """
+        Filter file name.
 
         Parameters
         ----------
@@ -164,27 +178,29 @@ class BatchFileMatch:
             pt = self._comp(patten)
             self.file_list = [i for i in self.file_list if re.search(pt, i) is not None]
         else:
-            # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
-            files = [i.name for i in self.file_list]
-            include = self._get_patten(include)
-            if include:
-                if "*" not in include and "|" not in include and "?" not in include:  # 简单模式
-                    self.file_list = [self.file_list[r] for r, i in enumerate(files) if include in i]
-                    files = [i for i in files if include in i]
-                else:
-                    pt = self._comp(include)
-                    index = [r for r, i in enumerate(files) if re.search(pt, i) is not None]
-                    self.file_list = [self.file_list[r] for r in index]
-                    files = [files[r] for r in index]
+            if not include and not exclude:
+                pass
+            else:
+                # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
+                files = [i.name for i in self.file_list]
+                include = self._get_patten(include)
+                if include:
+                    if any([i in include for i in ["*","|","?","."]]):# 简单模式
+                        self.file_list = [self.file_list[r] for r, i in enumerate(files) if include in i]
+                        files = [i for i in files if include in i] if exclude else []
+                    else:
+                        pt = self._comp(include)
+                        index = [r for r, i in enumerate(files) if re.search(pt, i) is not None]
+                        self.file_list = [self.file_list[r] for r in index]
+                        files = [files[r] for r in index] if exclude else []
 
-            exclude = self._get_patten(exclude)
-            if exclude:
-                if "*" not in exclude and "|" not in exclude and "?" not in exclude:  # 简单模式
-                    self.file_list = [self.file_list[r] for r, i in enumerate(files) if exclude not in i]
-                else:
-                    pt2 = self._comp(exclude)
-                    index = [r for r, i in enumerate(files) if re.search(pt2, i) is None]
-                    self.file_list = [self.file_list[r] for r in index]
+                exclude = self._get_patten(exclude)
+                if exclude:
+                    if any([i in exclude for i in ["*","|","?","."]]):# 简单模式
+                        self.file_list = [self.file_list[r] for r, i in enumerate(files) if exclude not in i]
+                    else:
+                        pt2 = self._comp(exclude)
+                        self.file_list = [self.file_list[r] for r, i in enumerate(files) if re.search(pt2, i) is None]
 
     def filter_dir_name(self, include: Union[List[str], str] = None, exclude: Union[List[str], str] = None,
                         layer: Union[None, List, int] = -1, patten: str = None):
@@ -214,52 +230,57 @@ class BatchFileMatch:
             pt = self._comp(patten)
             self.file_list = [i for i in self.file_list if re.search(pt, i) is not None]
         else:
-            try:
-                file_dir = [i.parent for i in self.file_list]
-                if layer is None or layer == 0:  # 全目录匹配
-                    pass
-                elif layer == -1:  # 匹配最后一层目录
-                    file_dir = [i.name for i in file_dir]
-                elif isinstance(layer, int):  # 匹配单层目录
-                    file_dir = [i.splitall()[layer] for i in file_dir]
-                elif isinstance(layer, (tuple, list)):  # 匹配多层目录
-                    file_dir = [i.splitall() for i in file_dir]
-                    file_dir = ["/".join([i[ll] for ll in layer]) for i in file_dir]
-                else:
-                    raise NotImplementedError("Wrong type of 'layer'.")
-            except IndexError as e:
-                print(f"> Make sure all the sub-dirs with in depth {layer}. Too big for 'layer'!!!")
-                raise e
+            if not include and not exclude:
+                pass
+            else:
+                try:
 
-            # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
-            include = self._get_patten(include)
-            if include:
-                if "*" not in include and "|" not in include and "?" not in include and "/" not in include:  # 简单模式
-                    self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if include in i]
-                    file_dir = [i for i in file_dir if include in i]
-                else:
-                    pt = self._comp(include)
-                    index = [r for r, i in enumerate(file_dir) if re.search(pt, i) is not None]
-                    self.file_list = [self.file_list[r] for r in index]
-                    file_dir = [file_dir[r] for r in index]
+                    if layer is None or layer == 0:  # 全目录匹配
+                        file_dir = [i.parent for i in self.file_list]
+                    elif layer == -1:  # 匹配最后一层目录
+                        file_dir = [i.parent.name for i in self.file_list]
+                    elif isinstance(layer, int):  # 匹配单层目录
+                        file_dir = [i.parent.splitall()[layer] for i in self.file_list]
+                    elif isinstance(layer, (tuple, list)):  # 匹配多层目录
+                        file_dir = [i.parent.splitall() for i in self.file_list]
+                        file_dir = ["/".join([i[ll] for ll in layer]) for i in file_dir]
+                    else:
+                        raise NotImplementedError("Wrong type of 'layer'.")
+                except IndexError as e:
+                    print(f"> Make sure all the sub-dirs with in depth {layer}. Too big for 'layer'!!!")
+                    raise e
 
-            exclude = self._get_patten(exclude)
-            if exclude:
-                if "*" not in exclude and "|" not in exclude and "?" not in exclude and "/" not in exclude:  # 简单模式
-                    self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if exclude not in i]
-                else:
-                    pt2 = self._comp(exclude)
-                    index = [r for r, i in enumerate(file_dir) if re.search(pt2, i) is None]
-                    self.file_list = [self.file_list[r] for r in index]
+                # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
+                if include:
+                    include = self._get_patten(include)
+                    if any([i in include for i in ["*", "|", "?", "."]]):  # 简单模式
+                        self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if include in i]
+                        file_dir = [i for i in file_dir if include in i] if exclude else []
+                    else:
+                        pt = self._comp(include)
+                        index = [r for r, i in enumerate(file_dir) if re.search(pt, i) is not None]
+                        self.file_list = [self.file_list[r] for r in index]
+                        file_dir = [file_dir[r] for r in index] if exclude else []
 
-    def merge(self, abspath=False):
+                if exclude:
+                    exclude = self._get_patten(exclude)
+                    if any([i in exclude for i in ["*","|","?","."]]):# 简单模式
+                        self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if exclude not in i]
+                    else:
+                        pt2 = self._comp(exclude)
+                        self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if re.search(pt2, i) is None]
+
+    def merge(self, abspath=False, force_relpath=False):
         """Merge dir and file name together, Get dir names."""
         if abspath:
             self.file_list = [i.abspath() for i in self.file_list]
         else:
-            self.file_list = [i.relpath(".") for i in self.file_list]
-            # add "./"
-            self.file_list = [Path.joinpath(".", i) if i[0] not in ["." or "/"] else i for i in self.file_list ]
+            if force_relpath:
+                self.file_list = [i.relpath(".") for i in self.file_list]
+                # add "./"
+                self.file_list = [Path.joinpath(".", i) if i[0] not in ["." or "/"] else i for i in self.file_list]
+            else:
+                pass
         file_dir = list((set([i.parent for i in self.file_list])))
         file_dir.sort()
         self.file_dir = file_dir
@@ -366,10 +387,10 @@ class BatchFileMatch:
         if dirs is None:
             dirs = self.file_dir
 
-        dirs = ["$WORKPATH" if i == "." else i + '/' for i in dirs]
+        dirs = ["$WORKPATH" if i == "." else i for i in dirs]
         dirs_text = "\n".join(dirs)
         index = [dirs_text.count(i) - 1 for i in dirs]
-        dirs =  [dirs[n] for n,i in enumerate(index) if i == 0]
+        dirs = [dirs[n] for n,i in enumerate(index) if i == 0]
         return [Path(".") if i == "$WORKPATH" else i for i in dirs]
 
 

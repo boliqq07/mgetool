@@ -2,6 +2,8 @@ import argparse
 import textwrap
 from importlib import import_module
 
+from mgetool.cli._formatter import Formatter
+
 
 class CLIError(Exception):
     """Error for CLI commands.
@@ -91,30 +93,3 @@ def main(prog='mgetool', description='mgetool command line tool.', args=None):
                       .format(prog, args.command))
                 parser.error(l1 + l2)
 
-
-class Formatter(argparse.HelpFormatter):
-    """Improved help formatter."""
-
-    def _fill_text(self, text, width, indent):
-        assert indent == ''
-        out = ''
-        blocks = text.split('\n\n')
-        for block in blocks:
-            if block != "":
-                if block[0] == '*':
-                    # List items:
-                    for item in block[2:].split('\n* '):
-                        out += textwrap.fill(item,
-                                             width=width - 2,
-                                             initial_indent='* ',
-                                             subsequent_indent='  ') + '\n'
-                elif block[0] == ' ':
-                    # Indented literal block:
-                    out += block + '\n'
-                else:
-                    # Block of text:
-                    out += textwrap.fill(block, width=width) + '\n'
-                out += '\n'
-            else:
-                pass
-        return out[:-1]
