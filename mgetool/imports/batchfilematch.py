@@ -382,16 +382,18 @@ class BatchFileMatch:
                 self._rm_check += 1
 
     def get_leaf_dir(self, dirs=None):
-        """Get the leaf dirs."""
+        """Get the leaf dirs. Remove "." path."""
+
+        # The ../paths could be worng!
 
         if dirs is None:
             dirs = self.file_dir
 
-        dirs = ["$WORKPATH" if i == "." else i for i in dirs]
+        dirs = [i for i in dirs if i not in (".", "./")]
         dirs_text = "\n".join(dirs)
         index = [dirs_text.count(i) - 1 for i in dirs]
-        dirs = [dirs[n] for n,i in enumerate(index) if i == 0]
-        return [Path(".") if i == "$WORKPATH" else i for i in dirs]
+        dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
+        return dirs
 
 
 # if __name__=="__main__":
