@@ -384,7 +384,7 @@ class BatchFileMatch:
     def get_leaf_dir(self, dirs=None):
         """Get the leaf dirs. Remove "." path."""
 
-        # The ../paths could be worng!
+        # The ../paths could be wrong!
 
         if dirs is None:
             dirs = self.file_dir
