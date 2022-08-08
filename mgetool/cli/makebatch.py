@@ -24,10 +24,12 @@ _dos_help = r"""根据路径文件,创建循环命令, 查看帮助使用 -h.
     $ python makebatch.py  -cmd 'cd $i \necho i \ncd ..'
 
 Key 1:
+
     cmd 命令用单引号,换行使用\n,并且其后不要留有空格,默认单引号包裹,
     （若不包裹,字符首先由系统shell解释,再传递到python, 请确定您知悉自己的操作目的再作决定.）
 
 例：
+
     # 批量复制
     $ mgetool makebatch -cmd 'cp '$PWD'/cpu.run ../ini_opt' -o cpbatch.sh
 
@@ -41,8 +43,7 @@ Key 1:
     $ mgetool makebatch -cmd 'cd .. \nrm -rf pure_static \ncp -r pure_opt pure_static \ncp pure_opt/CONTCAR pure_static/POSCAR \ncp '$PWD'/static_INCAR pure_static/INCAR' -o static_pure.sh
 
     # neb过渡态计算生成
-    $ mgetool makebatch -cmd 'cd .. \nnebmake.pl ini_static/CONTCAR fin_static/CONTCAR 3 \ncp ini_static/OUTCAR 00/OUTCAR \ncp fin_static/OUTCAR 04/OUTCAR \ncp ini_static/KPOINTS KPOINTS
-\ncp ini_static/POTCAR POTCAR \ncp '$PWD'/neb_cpu.run neb_cpu.run' -o nebbatch.sh
+    $ mgetool makebatch -cmd 'cd .. \nnebmake.pl ini_static/CONTCAR fin_static/CONTCAR 3 \ncp ini_static/OUTCAR 00/OUTCAR \ncp fin_static/OUTCAR 04/OUTCAR \ncp ini_static/KPOINTS KPOINTS\ncp ini_static/POTCAR POTCAR \ncp '$PWD'/neb_cpu.run neb_cpu.run' -o nebbatch.sh
 """
 
 
