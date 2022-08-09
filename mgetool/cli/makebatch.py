@@ -31,19 +31,19 @@ Key 1:
 例：
 
     # 批量复制
-    $ mgetool makebatch -cmd 'cp '$PWD'/cpu.run ../ini_opt' -o cpbatch.sh
+    $ makebatch -cmd 'cp '$PWD'/cpu.run ../ini_opt' -o cpbatch.sh
 
     # 提交脚本
-    $ mgetool makebatch -cmd 'jsub < $(find -name *.run)'
+    $ makebatch -cmd 'jsub < $(find -name *.run)'
 
     # vasp结构优化结果转vasp静态计算输入1
-    $ mgetool makebatch -cmd 'cd .. \nrm -rf ini_static \ncp -r ini_opt ini_static \ncp ini_opt/CONTCAR ini_static/POSCAR \ncp '$PWD'/static_INCAR ini_static/INCAR' -o static_ini.sh
+    $ makebatch -cmd 'cd .. \nrm -rf ini_static \ncp -r ini_opt ini_static \ncp ini_opt/CONTCAR ini_static/POSCAR \ncp '$PWD'/static_INCAR ini_static/INCAR' -o static_ini.sh
 
     # vasp结构优化结果转vasp静态计算输入2
-    $ mgetool makebatch -cmd 'cd .. \nrm -rf pure_static \ncp -r pure_opt pure_static \ncp pure_opt/CONTCAR pure_static/POSCAR \ncp '$PWD'/static_INCAR pure_static/INCAR' -o static_pure.sh
+    $ makebatch -cmd 'cd .. \nrm -rf pure_static \ncp -r pure_opt pure_static \ncp pure_opt/CONTCAR pure_static/POSCAR \ncp '$PWD'/static_INCAR pure_static/INCAR' -o static_pure.sh
 
     # neb过渡态计算生成
-    $ mgetool makebatch -cmd 'cd .. \nnebmake.pl ini_static/CONTCAR fin_static/CONTCAR 3 \ncp ini_static/OUTCAR 00/OUTCAR \ncp fin_static/OUTCAR 04/OUTCAR \ncp ini_static/KPOINTS KPOINTS\ncp ini_static/POTCAR POTCAR \ncp '$PWD'/neb_cpu.run neb_cpu.run' -o nebbatch.sh
+    $ makebatch -cmd 'cd .. \nnebmake.pl ini_static/CONTCAR fin_static/CONTCAR 3 \ncp ini_static/OUTCAR 00/OUTCAR \ncp fin_static/OUTCAR 04/OUTCAR \ncp ini_static/KPOINTS KPOINTS\ncp ini_static/POTCAR POTCAR \ncp '$PWD'/neb_cpu.run neb_cpu.run' -o nebbatch.sh
 """
 
 
@@ -111,20 +111,25 @@ class CLICommand:
     def run(args, parser):
         make_batch_from_file(args.path_file, args.commands, args.store_name, args.enter)
 
+    @staticmethod
+    def parse_args(parser):
+        return parser.parse_args()
+
 
 def main():
-    # 命令行模式
-    import argparse
+    """
+    Example:
+        $ python this.py -p /home/dir_name
+        $ python this.py -f /home/dir_name/path.temp
+    """
+
     from mgetool.cli._formatter import Formatter
+    import argparse
 
     parser = argparse.ArgumentParser(description=_dos_help, formatter_class=Formatter)
-    parser.add_argument('-f', '--path_file', help='source path file.', type=str, default="paths.temp")
-    parser.add_argument('-cmd', '--commands', help='commands.', type=str, default="")
-    parser.add_argument('-enter', '--enter', help='enter the disk.', type=bool, default=True)
-    parser.add_argument('-o', '--store_name', help='out file name.', type=str, default="batch.sh")
-    args = parser.parse_args()
-
-    make_batch_from_file(args.path_file, args.commands, args.store_name, args.enter)
+    CLICommand.add_arguments(parser=parser)
+    args = CLICommand.parse_args(parser=parser)
+    CLICommand.run(args=args, parser=parser)
 
 
 if __name__ == '__main__':

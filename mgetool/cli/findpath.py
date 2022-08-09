@@ -99,7 +99,7 @@ def run(args, parser):
         fdir = "\n".join(fdir)
         f.writelines(fdir)
 
-    print("The {} paths '{}' are stored in '{}'.".format(num, args.store_name, str(os.getcwd())))
+    print("The '{}' of {} paths are stored in '{}'.".format(args.store_name, num,  str(os.getcwd())))
     print("OK")
 
 
@@ -123,30 +123,28 @@ class CLICommand:
                             default="paths.temp")
 
     @staticmethod
+    def parse_args(parser):
+        return parser.parse_args()
+
+    @staticmethod
     def run(args, parser):
         run(args, parser)
 
 
 def main():
-    # 命令行模式
-    import argparse
+    """
+    Example:
+        $ python this.py -p /home/dir_name
+        $ python this.py -f /home/dir_name/path.temp
+    """
+
     from mgetool.cli._formatter import Formatter
+    import argparse
 
     parser = argparse.ArgumentParser(description=_dos_help, formatter_class=Formatter)
-    parser.add_argument('-m', '--match_patten', help='match_patten.', type=str, default=None, )
-    parser.add_argument('-p', '--path', help='source path.', type=str, default=".")
-    parser.add_argument('-s', '--suffix', help='suffix of file.', type=str, default=None)
-    parser.add_argument('-if', '--file_include', help='include file name.', type=str, default=None)
-    parser.add_argument('-ef', '--file_exclude', help='exclude file name.', type=str, default=None)
-    parser.add_argument('-id', '--dir_include', help='include dir name.', type=str, default=None)
-    parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
-    parser.add_argument('-t', '--translate', help='If True, use shell patten, If False, use re patten to match.',
-                        type=bool, default=False)
-    parser.add_argument('-l', '--layer', help='search dir depth, default the last layer.', type=str, default="-1")
-    parser.add_argument('-abspath', '--abspath', help='return abspath', type=bool, default=False)
-    parser.add_argument('-o', '--store_name', help='out file name, default paths.temp.', type=str, default="paths.temp")
-    args = parser.parse_args()
-    run(args, parser)
+    CLICommand.add_arguments(parser=parser)
+    args = CLICommand.parse_args(parser=parser)
+    CLICommand.run(args=args, parser=parser)
 
 
 if __name__ == '__main__':
