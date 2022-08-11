@@ -14,30 +14,31 @@ from typing import Union, List
 from path import Path
 
 # patten >>>>>
-shell_patten_help = """
+shell_patten_help = r"""
 #(通配符字符串,使用''包裹,如'*.ext').
 *       匹配任意字符.
 ?       匹配任意单个字符.
 [seq]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
-[!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.
+[!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符. (不建议使用)
 """
 
 # patten >>>>>
-re_patten_help = """
+re_patten_help = r"""
 #(通配符字符串,使用''包裹,如'.*.ext')
-# .	匹配任意字符,除了换行符.
-# re*	匹配0个或多个的表达式.
-# re+	匹配1个或多个的表达式.
-# re?	匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
-# a|b	匹配a或b.
-# [...]	用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
-# [^...]	不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.
-# \w	匹配字母数字及下划线.
-# \W	匹配非字母数字及下划线.
-# \s	匹配任意空白字符.
-# \S	匹配任意非空字符.
-# \d	匹配任意数字,等价于 [0-9].
-# \D	匹配任意非数字.
+.       匹配任意字符,除了换行符.
+*       不可单独使用，前面需有字符.
+re*     匹配0个或多个的表达式.
+re+     匹配1个或多个的表达式.
+re?     匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
+a|b     匹配a或b.
+\w      匹配字母数字及下划线.
+\W      匹配非字母数字及下划线.
+\s      匹配任意空白字符.
+\S      匹配任意非空字符.
+\d      匹配任意数字,等价于 [0-9].
+\D      匹配任意非数字.
+[...]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
+[^...]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.  (不建议使用)
 """
 
 
@@ -51,12 +52,12 @@ def shell_to_re_compile_pattern(pat, trans=True):
         return re.compile(res)
     except BaseException as e:
         print("-------------------------\n"
-              "1. If trans==False (-t False) >>> ``re laws``\n"
+              "1. If trans==False (default) >>> ``re laws``\n"
               "----re module help-------")
         print(re_patten_help)
         print("More: https://docs.python.org/3/library/re.html?highlight=re#module-re\n\n"
               "-------------------------\n"
-              "2. If trans==True (-t True) >>> ``linux shell laws``\n"
+              "2. If trans==True (-t) >>> ``linux shell laws``\n"
               "---shell module help-----")
         print(shell_patten_help)
         print("------------------------\n")
@@ -107,6 +108,7 @@ class BatchFileMatch:
         if patten is not None:
 
             file_list = self.path.walkfiles()
+            patten = self._get_patten(patten)
             self.file_list = list(self.filter(file_list, pat=patten, trans=self.trans))
 
         else:
@@ -122,7 +124,6 @@ class BatchFileMatch:
 
         self.file_dir = []
         self._rm_check = 0
-
 
     def __repr__(self):
         return f"Root: {self.path}"
@@ -147,6 +148,13 @@ class BatchFileMatch:
 
     @staticmethod
     def _get_patten(my_strs):
+        if my_strs is not None and " " in my_strs:
+            my_strs = str(my_strs).replace("|", " ")
+            my_strs = my_strs.split(" ")
+            my_strs = [i for i in my_strs if i not in ["", " "]]
+        else:
+            pass
+
         if isinstance(my_strs, (tuple, list)):
             if len(my_strs) >= 2:
                 my_strs = "|".join(my_strs)
@@ -158,10 +166,43 @@ class BatchFileMatch:
             pass
         return my_strs
 
+    def filter_file_name_parent_folder(self, exclude=None):
+        """
+        filter the dir and sub-files contain the file!
+
+        Parameters
+        ----------
+        exclude: str,list
+            Delete the filename with exclude str
+            such as hold "ast_cap" file and delete "ast_tep" with "tep" str.
+
+        """
+
+        if exclude:
+            files = [i.name for i in self.file_list]
+            exclude = self._get_patten(exclude)
+            if not any([i in exclude for i in ["*", "|", "?", ".", "\\", "[", "+"]]):  # 简单模式
+                del_dirs = [self.file_list[r].parent for r, i in enumerate(files) if exclude in i]
+            else:
+                pt2 = self._comp(exclude)
+                del_dirs = [self.file_list[r].parent for r, i in enumerate(files) if re.search(pt2, i) is not None]
+
+            file_dir = list((set([i.parent for i in self.file_list])))
+            file_dir = self.get_leaf_dir(file_dir)
+
+            keep_dirs = set(file_dir) - set(del_dirs)
+            fs = []
+            [fs.extend(ki.files()) for ki in keep_dirs]
+            self.file_list = fs
+            self.file_dir = list(keep_dirs)
+
     def filter_file_name(self, include: Union[List[str], str] = None, exclude: Union[List[str], str] = None,
                          patten: str = None):
         """
         Filter file name.
+        ``exclude`` for in ``filter_file_name`` are just suitable for filter one file.
+        And don't filter the other files in same dir! Thus, the dirs are keep exist due to other files!!!
+        use ``filter_file_name_parent_folder`` instead.
 
         Parameters
         ----------
@@ -176,6 +217,7 @@ class BatchFileMatch:
         """
 
         if patten:
+            patten = self._get_patten(patten)
             pt = self._comp(patten)
             self.file_list = [i for i in self.file_list if re.search(pt, i) is not None]
         else:
@@ -184,9 +226,10 @@ class BatchFileMatch:
             else:
                 # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
                 files = [i.name for i in self.file_list]
-                include = self._get_patten(include)
+
                 if include:
-                    if any([i in include for i in ["*","|","?","."]]):# 简单模式
+                    include = self._get_patten(include)
+                    if not any([i in include for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(files) if include in i]
                         files = [i for i in files if include in i] if exclude else []
                     else:
@@ -195,16 +238,16 @@ class BatchFileMatch:
                         self.file_list = [self.file_list[r] for r in index]
                         files = [files[r] for r in index] if exclude else []
 
-                exclude = self._get_patten(exclude)
                 if exclude:
-                    if any([i in exclude for i in ["*","|","?","."]]):# 简单模式
+                    exclude = self._get_patten(exclude)
+                    if not any([i in exclude for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(files) if exclude not in i]
                     else:
                         pt2 = self._comp(exclude)
                         self.file_list = [self.file_list[r] for r, i in enumerate(files) if re.search(pt2, i) is None]
 
     def filter_dir_name(self, include: Union[List[str], str] = None, exclude: Union[List[str], str] = None,
-                        layer: Union[None, List, int] = -1, patten: str = None):
+                        layer: Union[None, List, int, str] = -1, patten: str = None):
         """
         Filter the dir (and its sub_file).
 
@@ -227,7 +270,20 @@ class BatchFileMatch:
         patten: str
             Patten for match, such as ‘*’,‘^’,'.' in ‘re’ module.
         """
+
+        if isinstance(layer, str):
+            if " " in layer:
+                layer = str(layer).split(" ")
+                layer = [int(i) for i in layer]
+                if len(layer) == 1:
+                    layer = layer[0]
+            else:
+                layer = int(layer)
+                if layer == 0:
+                    layer = None
+
         if patten:
+            patten = self._get_patten(patten)
             pt = self._comp(patten)
             self.file_list = [i for i in self.file_list if re.search(pt, i) is not None]
         else:
@@ -254,7 +310,7 @@ class BatchFileMatch:
                 # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
                 if include:
                     include = self._get_patten(include)
-                    if any([i in include for i in ["*", "|", "?", "."]]):  # 简单模式
+                    if not any([i in include for i in ["*","|","?",".","\\","[","+"]]):  # 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if include in i]
                         file_dir = [i for i in file_dir if include in i] if exclude else []
                     else:
@@ -265,7 +321,7 @@ class BatchFileMatch:
 
                 if exclude:
                     exclude = self._get_patten(exclude)
-                    if any([i in exclude for i in ["*","|","?","."]]):# 简单模式
+                    if not any([i in exclude for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if exclude not in i]
                     else:
                         pt2 = self._comp(exclude)
@@ -400,7 +456,8 @@ class BatchFileMatch:
 # if __name__=="__main__":
 #     bfm = BatchFileMatch(r"C:\Users\Administrator\PycharmProjects\samples\Instance\Instance_mo2co2\MoCMo-O-4")
 #
-#     bfm.filter_dir_name(exclude="Re|Co",include="pure_static",layer=0)
+#     # bfm.filter_dir_name(exclude="Re|Co", include="*ure_static",layer=0)
+#     bfm.filter_file_name_parent_folder(exclude="*.lobster")
 #
 #     print(bfm.file_list)
 #     bfm.merge()
