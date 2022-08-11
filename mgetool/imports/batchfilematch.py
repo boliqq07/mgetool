@@ -76,9 +76,10 @@ class BatchFileMatch:
     >>> bfm.merge()
     >>> print(bfm.file_dir)
     ...
-    #copy the file to new path and keep the dir structure
+
+    # copy the file to new path and keep the dir structure
     >>> bfm.copyfile(r"C:\Users\Admin\Desktop\d2")
-    #cancel copy
+    # cancel copy
     >>> bfm.copyfile_back()
     ...
     """
