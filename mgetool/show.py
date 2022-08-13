@@ -22,7 +22,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import rcParams
 from matplotlib.colorbar import ColorbarBase
-from sklearn.datasets import load_boston
+from sklearn.datasets import fetch_california_housing
 from sklearn.metrics import roc_curve, auc
 from sklearn.utils import check_random_state
 from sympy.physics.quantum.circuitplot import pyplot
@@ -570,7 +570,7 @@ class _BasePlot(object):
 
         Examples
         -----------
-        >>> data = load_boston(return_X_y=False)
+        >>> data = fetch_california_housing(return_X_y=False)
         >>> name0 = data["feature_names"]
         >>> x = data["data"]
         >>> ys = data["target"]
