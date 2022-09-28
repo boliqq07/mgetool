@@ -400,11 +400,11 @@ class _BasePlot(object):
         plt.legend(loc="lower right")
         return plt
 
-    def scatter_45_line(self, y_true, y_predict, strx='x', stry='y_predict', line_45=True):
+    def scatter_45_line(self, y_true, y_predict, strx='x', stry='y_predict', line_45=True, color="cyan"):
         """
         散点图45度线
         """
-        return self.scatter(x=y_true, y=y_predict, strx=strx, stry=stry, line_45=line_45)
+        return self.scatter(x=y_true, y=y_predict, strx=strx, stry=stry, line_45=line_45,color=color)
 
     @staticmethod
     def lines(ys, x=None, ys_labels=None, strx='x', stry='ys', no_marker=False, mark_size_ratio=1.0):
@@ -564,7 +564,7 @@ class _BasePlot(object):
 
     @staticmethod
     def corr_plot(x_cof, x_name=None, left_down="circle", right_top="pie", threshold_left=0.0, threshold_right=0.0,
-                  title=None, label_axis="off", front_raito=1):
+                  title=None, label_axis="off", front_raito=1.,linewidth_ratio=1.):
         """
         相关系数图,比较耗时，不要超过25个特征。
 
@@ -576,11 +576,13 @@ class _BasePlot(object):
         >>> ys = data["target"]
         >>> x_cof = np.corrcoef(x.T)
         >>> #plot
-        >>> plt = corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off")
+        >>> plt = BasePlot().corr_plot(x_cof, name0, left_down="circle", right_top="text", threshold_right=0.7, label_axis="off")
         >>> plt.show()
 
         Parameters
         ----------
+        linewidth_ratio:float
+            ratio to linewidth.
         x_cof:np.ndarray
             correlation coefficient matrix
         x_name:list,None
@@ -593,7 +595,7 @@ class _BasePlot(object):
             threshold for show.
         threshold_right:float
             threshold for show.
-        title:str
+        title:str,None
             picture title
         label_axis:"left","right","off"
             label_axis
@@ -602,9 +604,11 @@ class _BasePlot(object):
         """
         assert x_cof.shape[0] == x_cof.shape[1]
 
+        lr = linewidth_ratio
+
         x_cof = np.round(x_cof, 2)
         if x_name is None:
-            name = ["$x_{{{i}}}$".format(i=i) for i in range(x_cof.shape[1])]
+            x_name = ["$x_{{{i}}}$".format(i=i) for i in range(x_cof.shape[1])]
 
         size = x_cof
         or_size = np.nan_to_num((abs(size) / size) * (1 - abs(size)))
@@ -638,7 +642,7 @@ class _BasePlot(object):
             if types == "pie":
                 ax = plt.subplot(gs[i, j])
                 ax.pie((abs(size[i, j]), abs(or_size[i, j])), explode=explode, labels=None, autopct=None, shadow=False,
-                       startangle=90,
+                       startangle=90, normalize=False,
                        colors=[fill_colors[i, j], 'w'], wedgeprops=dict(width=1, edgecolor='black', linewidth=0.5),
                        counterclock=False,
                        frame=False, center=(0, 0), )
@@ -670,6 +674,7 @@ class _BasePlot(object):
                         horizontalalignment='center', verticalalignment='center')
                 ax.set_xticks([])
                 ax.set_yticks([])
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] *lr) for _ in ['right', 'top', 'left', 'bottom']]
                 # plt.axis('off')
             elif types == "circle":
                 ax = plt.subplot(gs[i, j])
@@ -677,8 +682,8 @@ class _BasePlot(object):
                 ax.set_xlim(-1, 1)
                 ax.scatter(0, 0, color=fill_colors[i, j], s=circle_size * abs(size[i, j]) ** 2)
                 ax.set_xticks([])
-
                 ax.set_yticks([])
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] *lr) for _ in ['right', 'top', 'left', 'bottom']]
                 # plt.axis('off')
 
             else:
@@ -694,15 +699,17 @@ class _BasePlot(object):
             #
             # ax.set_yticks([])
 
-            ax.text(0.5, 0.5, name[k], fontsize=ax_fontsize, horizontalalignment='center', verticalalignment='center')
+            ax.text(0.5, 0.5, x_name[k], fontsize=ax_fontsize, horizontalalignment='center', verticalalignment='center')
             ax.set_xticks([])
             ax.set_yticks([])
             if label_axis == "left":
                 color = ["w", "w", "b", "b"]
                 [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth']*lr) for _ in ['right', 'top', 'left', 'bottom']]
             elif label_axis == "right":
                 color = ["b", "b", "w", "w"]
                 [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth']*lr) for _ in ['right', 'top', 'left', 'bottom']]
             else:
                 plt.axis('off')
 
@@ -713,6 +720,8 @@ class _BasePlot(object):
         fig.subplots_adjust(right=0.80)
         cbar_ax = fig.add_axes([0.85, 0.125, 0.03, 0.75])
         ColorbarBase(cbar_ax, cmap=cmap, ticks=[0, 0.25, 0.5, 0.75, 1], format=fake_)
+        for spine in cbar_ax.spines.values():
+            spine.set_linewidth(rcParams['axes.linewidth']*lr)
         fig.set_size_inches(9, 8.5, forward=True)
         return plt
 
