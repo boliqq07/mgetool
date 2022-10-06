@@ -15,7 +15,8 @@ from path import Path
 
 # patten >>>>>
 shell_patten_help = r"""
-#(通配符字符串,使用''包裹,如'*.ext').
+(通配符字符串,使用''包裹,如'*.ext').
+
 *       匹配任意字符.
 ?       匹配任意单个字符.
 [seq]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
@@ -24,9 +25,10 @@ shell_patten_help = r"""
 
 # patten >>>>>
 re_patten_help = r"""
-#(通配符字符串,使用''包裹,如'.*.ext')
+(通配符字符串,使用''包裹,如'.*.ext')
+
 .       匹配任意字符,除了换行符.
-*       不可单独使用，前面需有字符.
+*       (不可单独使用，前面需有字符)
 re*     匹配0个或多个的表达式.
 re+     匹配1个或多个的表达式.
 re?     匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
@@ -61,6 +63,7 @@ def shell_to_re_compile_pattern(pat, trans=True):
               "---shell module help-----")
         print(shell_patten_help)
         print("------------------------\n")
+        print("Wrong patten, check the forward message to change the match patten.\n")
         raise e
 
 
@@ -277,6 +280,7 @@ class BatchFileMatch:
                 layer = [int(i) for i in layer]
                 if len(layer) == 1:
                     layer = layer[0]
+                    layer = int(layer)
             else:
                 layer = int(layer)
                 if layer == 0:
@@ -304,7 +308,7 @@ class BatchFileMatch:
                     else:
                         raise NotImplementedError("Wrong type of 'layer'.")
                 except IndexError as e:
-                    print(f"> Make sure all the sub-dirs with in depth {layer}. Too big for 'layer'!!!")
+                    print(f"----> Make sure all the sub-dirs with in depth {layer}. Too big for 'layer'!!!")
                     raise e
 
                 # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除

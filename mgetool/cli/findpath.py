@@ -83,7 +83,7 @@ def run(args, parser):
     bf.filter_file_name_parent_folder(exclude=args.file_exclude)
 
     if args.dir_exclude is not None:
-        print("use '-ed' could result to parent folder residue. Manual check and delete is recommended.")
+        print("Use '-ed' could result to parent folder residue. Manual check and delete is recommended.")
 
     bf.merge(abspath=args.abspath)
 

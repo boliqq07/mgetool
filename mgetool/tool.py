@@ -710,6 +710,28 @@ def dos2unix(file, out_file=None):
         for line in content.splitlines():
             output.write(line + b'\n')
 
+
+def group_spilt_array(array)->list:
+    """
+    Split 1D ndarray and return group.
+
+    Args:
+        array: (np.ndarray) with shape (n,).
+
+    Returns:
+        labels: list of(np.ndarray) with shape (n,).
+
+    """
+    index1 = np.argsort(array)
+
+    tmp = array[index1]
+
+    _, split_index = np.unique(tmp, return_index=True)
+
+    index_res = np.split(index1, split_index[1:])
+
+    return index_res
+
 if __name__ == "__main__":
     # def func(n, _=None):
     #     # time.sleep(0.0001)
