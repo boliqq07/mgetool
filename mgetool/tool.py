@@ -206,7 +206,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     """
     Parallelize the function for iterable.
 
-    The iterable would be batched into batch_size  for less resources transmission.
+    The iterable would be batched into batch_size  for less resource's transmission.
 
     Examples
     ----------
@@ -289,6 +289,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
     iterable = list(iterable)
     batch = len(iterable) // batch_size + 1
+    iterable = np.array(iterable, dtype=object)
     iterables = np.array_split(iterable, batch)
 
     parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
