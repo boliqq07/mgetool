@@ -47,18 +47,18 @@ def setting_rcParams_single(font="Arial", figure_size=(10, 7.5)):
         rcParams['font.family'] = 'serif'
         rcParams['font.serif'] = ['Times new roman']
     elif font == "Arial":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Arial"]
     elif font == "Helvetica":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Helvetica"]
     elif font == "Tahoma":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Tahoma"]
     elif font == "Monospace":
         rcParams['font.family'] = 'Monospace'
     elif font in ["SimHei", "黑体"]:
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["SimHei"]
     elif font in ["SimSun", "宋体"]:
         rcParams['font.family'] = 'serif'
@@ -126,18 +126,18 @@ def setting_rcParams_long(font="Arial", figure_size=(14.5, 11)):
         rcParams['font.family'] = 'serif'
         rcParams['font.serif'] = ['Times new roman']
     elif font == "Arial":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Arial"]
     elif font == "Helvetica":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Helvetica"]
     elif font == "Tahoma":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Tahoma"]
     elif font == "Monospace":
         rcParams['font.family'] = 'Monospace'
     elif font in ["SimHei", "黑体"]:
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["SimHei"]
     elif font in ["SimSun", "宋体"]:
         rcParams['font.family'] = 'serif'
@@ -205,18 +205,18 @@ def setting_rcParams_part(font="Arial", figure_size=(7, 5)):
         rcParams['font.family'] = 'serif'
         rcParams['font.serif'] = ['Times new roman']
     elif font == "Arial":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Arial"]
     elif font == "Helvetica":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Helvetica"]
     elif font == "Tahoma":
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["Tahoma"]
     elif font == "Monospace":
         rcParams['font.family'] = 'Monospace'
     elif font in ["SimHei", "黑体"]:
-        rcParams['font.family'] = 'sans serif'
+        rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ["SimHei"]
     elif font in ["SimSun", "宋体"]:
         rcParams['font.family'] = 'serif'

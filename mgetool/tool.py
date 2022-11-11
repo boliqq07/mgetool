@@ -714,7 +714,7 @@ def dos2unix(file, out_file=None):
 
 def group_spilt_array(array)->list:
     """
-    Split 1D ndarray and return group.
+    Split 1D ndarray and return group index.
 
     Args:
         array: (np.ndarray) with shape (n,).
