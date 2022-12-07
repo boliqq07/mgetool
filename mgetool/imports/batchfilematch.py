@@ -44,11 +44,14 @@ a|b     匹配a或b.
 """
 
 
-def shell_to_re_compile_pattern(pat, trans=True):
+def shell_to_re_compile_pattern(pat, trans=True, single=True,):
     """shell to re patten."""
     try:
         if trans:
             res = translate(pat)
+            if single is False:
+                res = res.replace("?s:", "?m:")
+                res = res.replace("\Z", "")
         else:
             res = pat
         return re.compile(res)
