@@ -11,17 +11,18 @@ Notes:
     Some tools for characterization.
 """
 import inspect
+import itertools
 import multiprocessing
 import numbers
 import os
 import random
-import re
 import time
 from collections.abc import Iterable
 from copy import deepcopy
 from functools import partial, wraps
 from itertools import chain
 from sys import getsizeof
+from typing import Union
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
@@ -66,7 +67,8 @@ def time_this_function(func):
 
 def check_random_state(seed):
     """
-    Turn seed into a random.RandomState instance. If use the numpy random, please user the check_random_state in sklearn.
+    Turn seed into a random.RandomState instance.
+    if using the numpy random, please user the check_random_state in sklearn.
 
     Parameters
     ----------
@@ -74,7 +76,7 @@ def check_random_state(seed):
         If seed is None, return the RandomState singleton used by random.
         If seed is an int, return a new RandomState instance seeded with seed.
         If seed is already a RandomState instance, return it.
-        Otherwise raise ValueError.
+        Otherwise, raise ValueError.
 
     Returns
     -------
@@ -91,18 +93,59 @@ def check_random_state(seed):
     raise ValueError('%r cannot be used to seed a seed'
                      ' instance' % seed)
 
+def tqdm2(iterable, tq=True, desc=None, **kwargs):
+    if tq:
+        return tqdm(iterable, desc=desc, **kwargs)
+    else:
+        return iterable
 
-def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j",
-                parallel_para_dict=None, respective_kwargs=False, desc=None,
+
+class VirPool:
+    """Just keep same operation."""
+
+    def close(self):
+        pass
+
+    def join(self):
+        pass
+
+
+def funcz(args, ff=None, respective=False, respective_kwargs=False, **kwargs):
+    """Keep the site of this function."""
+    if respective:
+        if respective_kwargs:
+            *i, kw = args
+            return ff(*i, **kw, **kwargs)
+        else:
+            return ff(*args, **kwargs)
+    else:
+        return ff(args, **kwargs)
+
+
+def funcz_batch(iterablei, ff=None, respective=False, respective_kwargs=False, **kwargs):
+    if respective:
+        if respective_kwargs:
+            return [ff(*i, **kw, **kwargs) for *i, kw in list(iterablei)]
+        else:
+            return [ff(*i, **kwargs) for i in list(iterablei)]
+    else:
+        return [ff(i, **kwargs) for i in list(iterablei)]
+
+
+def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: Union[int, str] = 'auto',
+                store=None, mode="j", lazy=False,
+                parallel_para_dict=None, respective_kwargs=False, desc=None, chunksize=1,
                 **kwargs):
     """
     Parallelize the function for iterable.
+    Make sure the 'func' youself is before the ' if __name__ == "__main__": ' code.
 
     Examples
     ----------
     >>> def func(x):
-    >>>     return x**2
-    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
+    ...     return x**2
+    >>> if __name__=="__main__":
+    >>>     result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
     [1,2,3,4,5]
 
     Note:
@@ -115,95 +158,209 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
             ...
             return int
 
-    make sure in if __name__ == "__main__":
+    make sure the if __name__ == "__main__":
 
     Parameters
     ----------
     parallel_para_dict:dict
-        Parameters passed to joblib.Parallel
+        Parameters passed to joblib.Parallel, mode="j"
     batch_size:str,int
-
+        size for mode="j"
     respective:bool
         Import the parameters respectively or as a whole for each one of iterable object.
     respective_kwargs:
-        the respective parameters contains kwargs or not. only for mode=="j" and respective=True
-        >>> for iter_i, kw in tqdm(iterable)):
-        >>>    func(*iter_i,**kw)
+        the respective parameters contains kwargs or not. only for respective=True
+        # >>> for iter_i, kw in tqdm(iterable)):
+        # >>>    func(*iter_i,**kw)
 
     tq:bool
-         View Progress or not
+         view progress or not
     desc:str
-        Prefix for the progressbar.
+        prefix for the progressbar.
     n_jobs:int
         cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
     means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
     func:
-        function to calculate
+        function to calculate.
     iterable:
-        iterable object
+        iterable object.
     kwargs:
-        kwargs for function
+        stable kwargs for 'func' function.
     store:
         Not been used.
-        store or not, if store, the result would be store to disk and return nothing.
     mode:
         "j":"joblib" or "m":"multiprocessing"
-        m for very big data and small loop.
+        all model ["apply", "apply_async", "map", "starmap","starmap_async", "map_async", "imap", "im", "j", "joblib"]
+    lazy: bool
+        return generator (lazy=True) or result list (lazy=False).
 
     Returns
     -------
     results
         function results
 
+
     """
-    if respective_kwargs:
-        assert mode == "j" and respective is True
-
-    if parallel_para_dict is None:
-        parallel_para_dict = {}
-    _ = store
-    func = partial(func, **kwargs)
-
-    if mode == "m" and n_jobs != 1:
-        pool = multiprocessing.Pool(processes=n_jobs)
-        if tq:
-            iterable = list(iterable)
-            result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
-                                                          total=len(iterable), desc=desc)]
-            pool.close()
+    if mode == "auto":
+        if lazy:
+            if respective:
+                if respective_kwargs:
+                    mode = "apply"
+                else:
+                    mode = "starmap"
+            else:
+                mode = "imap"  # or  "map"
         else:
-            result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
-            pool.close()
-        return result_list_tqdm
+            # mode = "j"
+            if respective:
+                if respective_kwargs:
+                    mode = "apply_async"
+                else:
+                    mode = "starmap_async"
+            else:
+                mode = "map_async"
+
+    _ = store  # Not used.
+
+    if respective_kwargs:
+        assert respective is True
+        assert mode in ["apply", "apply_async", "j", "joblib", "m", "imap", "im"]
+
+    if mode == "m":
+        mode = "imap"  # old version match.
 
     if effective_n_jobs(n_jobs) == 1:
-        parallel, func = list, func
-    else:
-        parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
+
+        if respective:
+            if respective_kwargs:
+                result = (
+                    func(*iter_i, **kws, **kwargs) for *iter_i, kws in tqdm2(iterable, tq=tq, desc=desc))
+            else:
+                result = (func(*iter_i, **kwargs) for iter_i in tqdm2(iterable, tq=tq, desc=desc))
+        else:
+            result = (func(iter_i, **kwargs) for iter_i in tqdm2(iterable, tq=tq, desc=desc))
+
+        if lazy:
+            return result, VirPool()
+        else:
+            return [i for i in result]
+
+    if mode in ["j", "joblib"]:
+
+        assert lazy is False, f"Just support lazy=False for mode={mode}."
+        if parallel_para_dict is None:
+            parallel_para_dict = {}
+        para_func = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
         func = delayed(func)
 
-    if tq:
         if respective:
             if respective_kwargs:
-                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw) for iter_i, kw in tqdm(iterable))
-                return parallel(func(*iter_i, **kw) for *iter_i, kw in tqdm(iterable, desc=desc))
+                return para_func(func(*iter_i, **kws, **kwargs) for *iter_i, kws in tqdm2(iterable, tq=tq, desc=desc))
             else:
-                return parallel(func(*iter_i) for iter_i in tqdm(iterable,desc=desc))
+                return para_func(func(*iter_i, **kwargs) for iter_i in tqdm2(iterable, tq=tq, desc=desc))
         else:
-            return parallel(func(iter_i) for iter_i in tqdm(iterable,desc=desc))
+            return para_func(func(iter_i, **kwargs) for iter_i in tqdm2(iterable, tq=tq, desc=desc))
+
+    elif mode in ["imap", "im"]:
+
+        if not respective:
+            func2 = partial(func, **kwargs)
+        else:
+            func2 = partial(funcz, ff=func, respective=respective, respective_kwargs=respective_kwargs, **kwargs)
+
+        pool = multiprocessing.Pool(processes=n_jobs)
+
+        result = tqdm2(pool.imap(func=func2, iterable=iterable, chunksize=chunksize), desc=desc, tq=tq)
+        # This is just used in Python mode rather than IPython
+
+        if not lazy:
+            result = [result_i for result_i in result]
+            pool.close()
+            pool.join()
+            return result
+        else:
+            """## lazy result: please make sure run the following code after get result.
+            >>> result = [for result_i in result] # in this line, you could use you function to deal with 'result_i'.
+            >>> pool.close()
+            >>> pool.join()
+            """
+            return result, pool
+
+    elif mode in ["map", "starmap", "starmap_async", "map_async"]:
+        assert respective_kwargs is False
+        func = partial(func, **kwargs)
+        pool = multiprocessing.Pool(processes=n_jobs)
+
+        if lazy:
+            assert "async" in mode, 'Just accept (lazy==True,mode=="**_async") or (lazy==False,mode=="**")'
+        else:
+            assert "async" not in mode, 'Just accept (lazy==True,mode=="**_async") or (lazy==False,mode=="**")'
+
+        if respective:
+            assert "star" in mode, 'If respective==True and mode in map class, mode could be "starmap" or ' \
+                                   '"starmap_async") '
+        else:
+            assert "star" not in mode, 'If respective==False and mode in map class, mode could be "map" or "map_async")'
+
+        para_func = getattr(pool, mode)
+
+        if not lazy:
+            result = tqdm2(para_func(func=func, iterable=iterable), desc=desc, tq=tq)
+            result = [result_i for result_i in result]
+            pool.close()
+            pool.join()
+            return result
+        else:
+            result = para_func(func=func, iterable=iterable)
+            result = (result_i for result_i in tqdm2(result.get(), tq=tq, desc=desc))
+            """## lazy result: please make sure run the following code after get result.
+            >>> result = [for result_i in result] # in this line, you could use you function to deal with 'result_i'.
+            >>> pool.close()
+            >>> pool.join()
+            """
+            return result, pool
+
+    elif mode in ["apply", "apply_async"]:
+
+        func = partial(func, **kwargs)
+        pool = multiprocessing.Pool(processes=n_jobs)
+
+        if lazy and mode == "apply_async":
+            para_func = pool.apply_async
+        elif not lazy and mode == "apply":
+            para_func = pool.apply
+        else:
+            raise KeyError('Just accept (lazy==True,mode=="apply_async") or (lazy==False,mode=="apply")')
+
+        if respective:
+            if respective_kwargs:
+                result = [para_func(func=func, args=iter_i, kwds=kwds)
+                          for *iter_i, kwds in tqdm2(iterable, tq=tq, desc=desc)]
+            else:
+                result = [para_func(func=func, args=iter_i) for (*iter_i,) in tqdm2(iterable, tq=tq, desc=desc)]
+        else:
+            result = [para_func(func=func, args=(iter_i,)) for iter_i in tqdm2(iterable, tq=tq, desc=desc)]
+
+        if not lazy:
+            pool.close()
+            pool.join()
+            return result
+        else:
+            result = (result_i.get() for result_i in tqdm2(result, tq=tq, desc=desc))
+            """## lazy result: please make sure run the following code after get result.
+            >>> result = [for result_i in result] # in this line, you could use you function to deal with 'result_i'.
+            >>> pool.close()
+            >>> pool.join()
+            """
+            return result, pool
+
     else:
-        if respective:
-            if respective_kwargs:
-                # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw)  for iter_i, kw in iterable)
-                return parallel(func(*iter_i, **kw) for *iter_i, kw in iterable)
-            else:
-                return parallel(func(*iter_i) for iter_i in iterable)
-        else:
-            return parallel(func(iter_i) for iter_i in iterable)
+        raise NameError('Accept mode: ["apply", "apply_async", "map", "starmap",'
+                        '"starmap_async", "map_async", "imap", "im", "j", "joblib"]')
 
 
 def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="j",
-                      parallel_para_dict: dict = None, respective_kwargs=False, desc=None,
+                      parallel_para_dict: dict = None, respective_kwargs=False, desc=None, lazy=False,
                       **kwargs):
     """
     Parallelize the function for iterable.
@@ -213,8 +370,9 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
     Examples
     ----------
     >>> def func(x):
-    >>>     return x**2
-    >>> result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
+    ...     return x**2
+    >>> if __name__=="__main__":
+    >>>     result = parallelize(n_jobs=2,func=func,iterable=[1,2,3,4,5])
 
     [1,2,3,4,5]
 
@@ -226,28 +384,27 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         ...
         return int
 
-    make sure in if __name__ == "__main__":
+    make sure the if __name__ == "__main__":
 
     Parameters
     ----------
-
     respective_kwargs:
         the respective parameters contains kwargs or not. only for mode=="j" and respective=True.
         the first iterable i is tuple and second kw is dict.
-        >>> for iter_i, kw in tqdm(iterable)):
-        >>>    func(*iter_i,**kw)
+        # >>> for iter_i, kw in tqdm(iterable)):
+        # >>>    func(*iter_i,**kw)
 
     parallel_para_dict:dict
         Parameters passed to joblib.Parallel
-    batch_size:int
+    batch_size:int,str
         For small data and very big loop.with model "m"
     respective:bool
         Import the parameters respectively or as a whole
     tq:bool
-         View Progress or not
+         View progress or not
     n_jobs:int
         cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
-    means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
+        means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
     func:
         function to calculate
     iterable:
@@ -261,81 +418,71 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         Prefix for the progressbar.
     store:bool,None
         Not used, store or not, if store, the result would be store to disk and return nothing.
+    lazy: bool
+        return generator (lazy=True) or result list (lazy=False).
 
     Returns
     -------
-    results
+    results:
         function results
 
     """
     if respective_kwargs:
-        assert mode == "j" and respective is True
+        assert respective is True
 
     if parallel_para_dict is None:
         parallel_para_dict = {}
 
     if effective_n_jobs(n_jobs) == 1:
-        return parallelize(n_jobs, func, iterable, respective, tq, batch_size, store,
+        return parallelize(n_jobs, func=func, iterable=iterable, respective=respective, tq=tq,
+                           batch_size=batch_size, store=store,
                            respective_kwargs=respective_kwargs,
                            **kwargs, **parallel_para_dict)
-
-    func = partial(func, **kwargs)
-
-    def func_batch_re(iterablei):
-        if respective_kwargs:
-
-            return [func(*i, **kw) for *i, kw in list(iterablei)]
-        else:
-            return [func(*i) for i in list(iterablei)]
-
-    def func_batch_nre(iterablei):
-        return [func(i) for i in list(iterablei)]
 
     iterable = list(iterable)
     batch = len(iterable) // batch_size + 1
     iterable = np.array(iterable, dtype=object)
     iterables = np.array_split(iterable, batch)
 
-    parallel = Parallel(n_jobs=n_jobs, batch_size=batch_size, **parallel_para_dict)
-
-    if mode == "m":
-        # no tq
-        global func_batch_nree
-
-        def func_batch_nree(iterablei):
-            return [func(i) for i in list(iterablei)]
+    if mode in ["m", "imap", "im"]:
 
         pool = multiprocessing.Pool(processes=n_jobs)
-        if tq:
-            rett = [result for result in tqdm(pool.imap(func=func_batch_nree, iterable=iterables),
-                                              total=len(iterables), desc=desc)]
-            pool.close()
-        else:
-            rett = [result for result in pool.imap(func=func_batch_nree, iterable=iterables)]
-            pool.close()
-        ret = []
-        [ret.extend(i) for i in rett]
-        del func_batch_nree
-        return ret
 
-    if respective:
-        func_batch = delayed(func_batch_re)
+        func2 = partial(funcz_batch, ff=func, respective=respective, respective_kwargs=respective_kwargs, **kwargs)
+
+        rett = tqdm2(pool.imap(func=func2, iterable=iterables),
+                     total=len(iterables), desc=desc, tq=tq)
+        pool.close()
+        pool.join()
+
+        result = []
+        if not lazy:
+            [result.extend(i) for i in rett]
+            pool.close()
+            pool.join()
+            return result
+        else:
+            return itertools.chain(*rett), pool
+
+    elif mode in ["j", "joblib"]:
+        assert lazy is False
+
+        func2 = partial(funcz_batch, ff=func, respective=respective, respective_kwargs=respective_kwargs, **kwargs)
+
+        parallel = Parallel(n_jobs=n_jobs, batch_size=1, **parallel_para_dict)
+
+        func_batch = delayed(func2)
+
+        try:
+            y = parallel(func_batch(iter_i) for iter_i in tqdm2(iterables, desc=desc, tq=tq))
+            ret = []
+            [ret.extend(i) for i in y]
+            return ret
+        except MemoryError:
+            raise MemoryError(
+                "The total size of calculation is out of Memory, please spilt your data.")
     else:
-        func_batch = delayed(func_batch_nre)
-
-    try:
-        if tq:
-            y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables,desc=desc))
-        else:
-            y = parallel(func_batch_nre(iter_i) for iter_i in iterables)
-
-        ret = []
-        [ret.extend(i) for i in y]
-        return ret
-    except MemoryError:
-
-        raise MemoryError(
-            "The total size of calculation is out of Memory, please try ’store‘ result to disk but return to window")
+        raise NameError('Accept mode: ["imap", "im", "j", "joblib"]')
 
 
 def parallelize_imap(n_jobs, func, iterable, tq=True, desc=None):
@@ -353,14 +500,17 @@ def parallelize_imap(n_jobs, func, iterable, tq=True, desc=None):
     desc:str
         Prefix for the progressbar.
     """
+    # This is just used in Python mode rather than IPython
     pool = multiprocessing.Pool(processes=n_jobs)
     if tq:
         result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
                                                       total=len(iterable), desc=desc)]
         pool.close()
+        pool.join()
     else:
         result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
         pool.close()
+        pool.join()
 
     return result_list_tqdm
 
@@ -718,7 +868,7 @@ def dos2unix(file, out_file=None):
             output.write(line + b'\n')
 
 
-def group_spilt_array(array)->list:
+def group_spilt_array(array) -> list:
     """
     Split 1D ndarray and return group index.
 
@@ -739,53 +889,57 @@ def group_spilt_array(array)->list:
 
     return index_res
 
-if __name__ == "__main__":
-    # def func(n, _=None):
-    #     # time.sleep(0.0001)
-    #     s = np.random.random((100, 50))
-    #     return s
-    #
-    #
-    # iterable = np.arange(10000)
-    # iterable2 = np.arange(20000)
-    # tt.t
-    # s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
-    # tt.t
-    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000)
-    # tt.t
-    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, )
-    # tt.t
-    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, )
-    #
-    # tt.t
-    # s = parallelize(1, func, list(zip(iterable, iterable)), respective=True, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,
-    #                       mode="m")
-    # tt.t
-    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-    # tt.t
-    # tt.p
 
-    def func2(n, j, dc=None, dp=None):
-        # time.sleep(0.0001)
-        s = np.random.random((100, 50))
-        return s
+# def func(n, _=None
+#          ):
+#     # time.sleep(0.0001)
+#     s = np.random.random((100, 50))
+#     return s
 
-
-    iterable = np.arange(10000)
-    kw = [{"dc": iterable[i], "dp": iterable[i]} for i in range(len(iterable))]
-    iterables = zip(iterable, iterable, kw)
-    # iterables = zip(iterable,kw)
-    tt.t
-    s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True,desc="jobs1")
-    tt.t
-    tt.p
-
-    tt.t
-    s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",desc="jobs2",
-                          respective_kwargs=True)
-    tt.t
-    tt.p
+# if __name__ == "__main__":
+#     iterable = np.arange(10000)
+#     iterable2 = np.arange(20000)
+#     tt.t
+#     s = parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
+#     tt.t
+#     s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000)
+#
+#     ss = parallelize_imap(2, func, iterable, tq=False)
+#     tt.t
+#     s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, )
+#     tt.t
+#     s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, )
+#
+#     # tt.t
+#     s = parallelize(2, func, list(zip(iterable, iterable)), respective=True,
+#                     tq=True, batch_size=1000, mode="m")
+#     tt.t
+#     s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
+#     tt.t
+#     s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,
+#                           mode="m")
+#     tt.t
+#     s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
+#     tt.t
+#     tt.p
+#
+#     def func2(n, j, dc=None, dp=None):
+#         # time.sleep(0.0001)
+#         s = np.random.random((100, 50))
+#         return s
+#
+#
+#     iterable = np.arange(10000)
+#     kw = [{"dc": iterable[i], "dp": iterable[i]} for i in range(len(iterable))]
+#     iterables = zip(iterable, iterable, kw)
+#     # iterables = zip(iterable,kw)
+#     tt.t
+#     s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True,desc="jobs1")
+#     tt.t
+#     tt.p
+#
+#     tt.t
+#     s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",desc="jobs2",
+#                           respective_kwargs=True)
+#     tt.t
+#     tt.p
