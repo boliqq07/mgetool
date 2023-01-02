@@ -93,7 +93,7 @@ def check_random_state(seed):
 
 
 def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='auto', store=None, mode="j",
-                parallel_para_dict=None, respective_kwargs=False,
+                parallel_para_dict=None, respective_kwargs=False, desc=None,
                 **kwargs):
     """
     Parallelize the function for iterable.
@@ -132,6 +132,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
     tq:bool
          View Progress or not
+    desc:str
+        Prefix for the progressbar.
     n_jobs:int
         cpu numbers. n_jobs is the number of workers requested by the callers. Passing n_jobs=-1
     means requesting all available workers for instance matching the number of CPU cores on the worker host(s).
@@ -167,7 +169,7 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         if tq:
             iterable = list(iterable)
             result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
-                                                          total=len(iterable))]
+                                                          total=len(iterable), desc=desc)]
             pool.close()
         else:
             result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
@@ -184,11 +186,11 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
         if respective:
             if respective_kwargs:
                 # return parallel(func(*iter_i, **kw) if isinstance(iter_i, Iterable) else func(iter_i, **kw) for iter_i, kw in tqdm(iterable))
-                return parallel(func(*iter_i, **kw) for *iter_i, kw in tqdm(iterable))
+                return parallel(func(*iter_i, **kw) for *iter_i, kw in tqdm(iterable, desc=desc))
             else:
-                return parallel(func(*iter_i) for iter_i in tqdm(iterable))
+                return parallel(func(*iter_i) for iter_i in tqdm(iterable,desc=desc))
         else:
-            return parallel(func(iter_i) for iter_i in tqdm(iterable))
+            return parallel(func(iter_i) for iter_i in tqdm(iterable,desc=desc))
     else:
         if respective:
             if respective_kwargs:
@@ -201,7 +203,7 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size='a
 
 
 def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: int = 1000, store=None, mode="j",
-                      parallel_para_dict: dict = None, respective_kwargs=False,
+                      parallel_para_dict: dict = None, respective_kwargs=False, desc=None,
                       **kwargs):
     """
     Parallelize the function for iterable.
@@ -255,6 +257,8 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         m for very big data and small loop.
     kwargs:
         kwargs for function
+    desc:str
+        Prefix for the progressbar.
     store:bool,None
         Not used, store or not, if store, the result would be store to disk and return nothing.
 
@@ -304,7 +308,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
         pool = multiprocessing.Pool(processes=n_jobs)
         if tq:
             rett = [result for result in tqdm(pool.imap(func=func_batch_nree, iterable=iterables),
-                                              total=len(iterables))]
+                                              total=len(iterables), desc=desc)]
             pool.close()
         else:
             rett = [result for result in pool.imap(func=func_batch_nree, iterable=iterables)]
@@ -321,7 +325,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
     try:
         if tq:
-            y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables))
+            y = parallel(func_batch(iter_i) for iter_i in tqdm(iterables,desc=desc))
         else:
             y = parallel(func_batch_nre(iter_i) for iter_i in iterables)
 
@@ -334,7 +338,7 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
             "The total size of calculation is out of Memory, please try ’store‘ result to disk but return to window")
 
 
-def parallelize_imap(n_jobs, func, iterable, tq=True):
+def parallelize_imap(n_jobs, func, iterable, tq=True, desc=None):
     """
     Parallelize the function for iterable.
 
@@ -346,11 +350,13 @@ def parallelize_imap(n_jobs, func, iterable, tq=True):
     iterable:List
     n_jobs:int
     tq:bool
+    desc:str
+        Prefix for the progressbar.
     """
     pool = multiprocessing.Pool(processes=n_jobs)
     if tq:
         result_list_tqdm = [result for result in tqdm(pool.imap(func=func, iterable=iterable),
-                                                      total=len(iterable))]
+                                                      total=len(iterable), desc=desc)]
         pool.close()
     else:
         result_list_tqdm = [result for result in pool.imap(func=func, iterable=iterable)]
@@ -765,8 +771,6 @@ if __name__ == "__main__":
 
     def func2(n, j, dc=None, dp=None):
         # time.sleep(0.0001)
-        assert isinstance(dc, np.int64)
-        assert isinstance(dp, np.int64)
         s = np.random.random((100, 50))
         return s
 
@@ -776,12 +780,12 @@ if __name__ == "__main__":
     iterables = zip(iterable, iterable, kw)
     # iterables = zip(iterable,kw)
     tt.t
-    s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True)
+    s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True,desc="jobs1")
     tt.t
     tt.p
 
     tt.t
-    s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",
+    s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",desc="jobs2",
                           respective_kwargs=True)
     tt.t
     tt.p
