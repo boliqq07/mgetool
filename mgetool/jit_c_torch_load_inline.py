@@ -30,7 +30,7 @@ torch::Tensor d_sigmoid(torch::Tensor z) {
 
 
 def inline_c_torch(source_cpp=source, module_name="segment_method", temps="temps",
-                   suffix=None, functions=['d_sigmoid',]):
+                   suffix=None, functions=['d_sigmoid', ]):
     """
     torch.utils.cpp_extension.load_inline, just jump build if exist.
 
@@ -56,7 +56,6 @@ def inline_c_torch(source_cpp=source, module_name="segment_method", temps="temps
 
     if suffix:
         ext = suffix
-
 
     name_dir = temps + name
     MODULE_DIR = Path(__file__).parent.absolute()

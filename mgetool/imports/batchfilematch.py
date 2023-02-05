@@ -44,7 +44,7 @@ a|b     匹配a或b.
 """
 
 
-def shell_to_re_compile_pattern(pat, trans=True, single=True,):
+def shell_to_re_compile_pattern(pat, trans=True, single=True, ):
     """shell to re patten."""
     try:
         if trans:
@@ -108,7 +108,7 @@ class BatchFileMatch:
             If true, use shell patten to match.
             If False, use re patten to match.
         """
-        self.trans=trans
+        self.trans = trans
 
         self.path = Path(path)
         if patten is not None:
@@ -235,7 +235,7 @@ class BatchFileMatch:
 
                 if include:
                     include = self._get_patten(include)
-                    if not any([i in include for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
+                    if not any([i in include for i in ["*", "|", "?", ".", "\\", "[", "+"]]):  # 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(files) if include in i]
                         files = [i for i in files if include in i] if exclude else []
                     else:
@@ -246,7 +246,7 @@ class BatchFileMatch:
 
                 if exclude:
                     exclude = self._get_patten(exclude)
-                    if not any([i in exclude for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
+                    if not any([i in exclude for i in ["*", "|", "?", ".", "\\", "[", "+"]]):  # 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(files) if exclude not in i]
                     else:
                         pt2 = self._comp(exclude)
@@ -317,7 +317,7 @@ class BatchFileMatch:
                 # 只要出现include内容 - 保留,或者只要出现exclude内容 - 删除
                 if include:
                     include = self._get_patten(include)
-                    if not any([i in include for i in ["*","|","?",".","\\","[","+"]]):  # 简单模式
+                    if not any([i in include for i in ["*", "|", "?", ".", "\\", "[", "+"]]):  # 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if include in i]
                         file_dir = [i for i in file_dir if include in i] if exclude else []
                     else:
@@ -328,11 +328,12 @@ class BatchFileMatch:
 
                 if exclude:
                     exclude = self._get_patten(exclude)
-                    if not any([i in exclude for i in ["*","|","?",".","\\","[","+"]]):# 简单模式
+                    if not any([i in exclude for i in ["*", "|", "?", ".", "\\", "[", "+"]]):  # 简单模式
                         self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if exclude not in i]
                     else:
                         pt2 = self._comp(exclude)
-                        self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if re.search(pt2, i) is None]
+                        self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if
+                                          re.search(pt2, i) is None]
 
     def merge(self, abspath=False, force_relpath=False):
         """Merge dir and file name together, Get dir names."""
@@ -458,7 +459,6 @@ class BatchFileMatch:
         index = [dirs_text.count(i) - 1 for i in dirs]
         dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
         return dirs
-
 
 # if __name__=="__main__":
 #     bfm = BatchFileMatch(r"C:\Users\Administrator\PycharmProjects\samples\Instance\Instance_mo2co2\MoCMo-O-4")

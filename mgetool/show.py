@@ -12,11 +12,11 @@ u"""通用画图部分模块
 """
 
 import re
-import networkx as nx
 from itertools import product, zip_longest
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -404,7 +404,7 @@ class _BasePlot(object):
         """
         散点图45度线
         """
-        return self.scatter(x=y_true, y=y_predict, strx=strx, stry=stry, line_45=line_45,color=color)
+        return self.scatter(x=y_true, y=y_predict, strx=strx, stry=stry, line_45=line_45, color=color)
 
     @staticmethod
     def lines(ys, x=None, ys_labels=None, strx='x', stry='ys', no_marker=False, mark_size_ratio=1.0):
@@ -564,7 +564,7 @@ class _BasePlot(object):
 
     @staticmethod
     def corr_plot(x_cof, x_name=None, left_down="circle", right_top="pie", threshold_left=0.0, threshold_right=0.0,
-                  title=None, label_axis="off", front_raito=1.,linewidth_ratio=1.):
+                  title=None, label_axis="off", front_raito=1., linewidth_ratio=1.):
         """
         相关系数图,比较耗时，不要超过25个特征。
 
@@ -674,7 +674,8 @@ class _BasePlot(object):
                         horizontalalignment='center', verticalalignment='center')
                 ax.set_xticks([])
                 ax.set_yticks([])
-                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] *lr) for _ in ['right', 'top', 'left', 'bottom']]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] * lr) for _ in
+                 ['right', 'top', 'left', 'bottom']]
                 # plt.axis('off')
             elif types == "circle":
                 ax = plt.subplot(gs[i, j])
@@ -683,7 +684,8 @@ class _BasePlot(object):
                 ax.scatter(0, 0, color=fill_colors[i, j], s=circle_size * abs(size[i, j]) ** 2)
                 ax.set_xticks([])
                 ax.set_yticks([])
-                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] *lr) for _ in ['right', 'top', 'left', 'bottom']]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] * lr) for _ in
+                 ['right', 'top', 'left', 'bottom']]
                 # plt.axis('off')
 
             else:
@@ -705,11 +707,13 @@ class _BasePlot(object):
             if label_axis == "left":
                 color = ["w", "w", "b", "b"]
                 [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
-                [ax.spines[_].set_linewidth(rcParams['axes.linewidth']*lr) for _ in ['right', 'top', 'left', 'bottom']]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] * lr) for _ in
+                 ['right', 'top', 'left', 'bottom']]
             elif label_axis == "right":
                 color = ["b", "b", "w", "w"]
                 [ax.spines[i].set_color(j) for i, j in zip(['right', 'top', 'left', 'bottom'], color)]
-                [ax.spines[_].set_linewidth(rcParams['axes.linewidth']*lr) for _ in ['right', 'top', 'left', 'bottom']]
+                [ax.spines[_].set_linewidth(rcParams['axes.linewidth'] * lr) for _ in
+                 ['right', 'top', 'left', 'bottom']]
             else:
                 plt.axis('off')
 
@@ -721,7 +725,7 @@ class _BasePlot(object):
         cbar_ax = fig.add_axes([0.85, 0.125, 0.03, 0.75])
         ColorbarBase(cbar_ax, cmap=cmap, ticks=[0, 0.25, 0.5, 0.75, 1], format=fake_)
         for spine in cbar_ax.spines.values():
-            spine.set_linewidth(rcParams['axes.linewidth']*lr)
+            spine.set_linewidth(rcParams['axes.linewidth'] * lr)
         fig.set_size_inches(9, 8.5, forward=True)
         return plt
 

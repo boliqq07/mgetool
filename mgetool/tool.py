@@ -18,7 +18,6 @@ import os
 import random
 import time
 from collections.abc import Iterable
-from copy import deepcopy
 from functools import partial, wraps
 from itertools import chain
 from sys import getsizeof
@@ -92,6 +91,7 @@ def check_random_state(seed):
         return seed
     raise ValueError('%r cannot be used to seed a seed'
                      ' instance' % seed)
+
 
 def tqdm2(iterable, tq=True, desc=None, **kwargs):
     if tq:
@@ -224,7 +224,8 @@ def parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_size: U
 
     if respective_kwargs:
         assert respective is True
-        assert mode in ["apply", "apply_async", "j", "joblib", "m", "imap", "im"]
+        if effective_n_jobs(n_jobs) != 1:
+            assert mode in ["apply", "apply_async", "j", "joblib", "m", "imap", "im"]
 
     if mode == "m":
         mode = "imap"  # old version match.
@@ -435,9 +436,9 @@ def batch_parallelize(n_jobs, func, iterable, respective=False, tq=True, batch_s
 
     if effective_n_jobs(n_jobs) == 1:
         return parallelize(n_jobs, func=func, iterable=iterable, respective=respective, tq=tq,
-                           batch_size=batch_size, store=store,
-                           respective_kwargs=respective_kwargs,
-                           **kwargs, **parallel_para_dict)
+                           batch_size=batch_size, store=store, desc=desc, lazy=lazy,
+                           respective_kwargs=respective_kwargs, parallel_para_dict=parallel_para_dict,
+                           **kwargs, )
 
     iterable = list(iterable)
     batch = len(iterable) // batch_size + 1
@@ -798,61 +799,6 @@ def cmd_popen(d, cmd):
 tt = TTClass()
 
 
-def coarse_and_spilt_array(array: np.ndarray, tol: float = 0.5, method: str = None, n_cluster: int = 3) -> np.ndarray:
-    """
-    Split 1D ndarray by distance or group.
-
-    Args:
-        array: (np.ndarray) with shape (n,).
-        tol: (float) tolerance distance for spilt.
-        method:(str) default None. others: "agg", "k_means", "cluster", "k_means_user".
-        n_cluster: (int) number of cluster.
-
-    Returns:
-        labels: (np.ndarray) with shape (n,).
-
-    """
-    if method in ["agg", "k_means"]:
-        if method == "agg":
-            from sklearn.cluster import AgglomerativeClustering
-            ac = AgglomerativeClustering(n_clusters=None, distance_threshold=tol, compute_distances=True)
-        else:
-            from sklearn.cluster import KMeans
-            ac = KMeans(n_clusters=n_cluster)
-
-        ac.fit(array.reshape(-1, 1))
-        labels_ = ac.labels_
-        labels_max = np.max(labels_)
-        labels = deepcopy(labels_)
-        dis = np.array([np.mean(array[labels_ == i]) for i in range(labels_max + 1)])
-        dis_index = np.argsort(dis)
-        for i in range(labels_max + 1):
-            labels[labels_ == i] = dis_index[i]
-        return labels
-    else:
-        # use tol directly
-        array = array.ravel()
-        array_sindex = np.argsort(array)
-        array_sort = array[array_sindex]
-        i = 0
-        label = 0
-        labels = []
-        while i < len(array_sort):
-            if i == 0:
-                labels.append(label)
-            else:
-                if array_sort[i] - array_sort[i - 1] < tol:
-                    labels.append(label)
-                else:
-                    label += 1
-                    labels.append(label)
-            i += 1
-
-        labels = np.array(labels)[np.argsort(array_sindex)]
-
-        return labels
-
-
 def dos2unix(file, out_file=None):
     """
 
@@ -868,78 +814,33 @@ def dos2unix(file, out_file=None):
             output.write(line + b'\n')
 
 
-def group_spilt_array(array) -> list:
-    """
-    Split 1D ndarray and return group index.
-
-    Args:
-        array: (np.ndarray) with shape (n,).
-
-    Returns:
-        labels: list of(np.ndarray) with shape (n,).
-
-    """
-    index1 = np.argsort(array)
-
-    tmp = array[index1]
-
-    _, split_index = np.unique(tmp, return_index=True)
-
-    index_res = np.split(index1, split_index[1:])
-
-    return index_res
+if __name__ == "__main__":
+    def func(n, z=4
+             ):
+        time.sleep(0.000001)
+        s = np.random.random((100, 50)) ** 2
+        return s
 
 
-# def func(n, _=None
-#          ):
-#     # time.sleep(0.0001)
-#     s = np.random.random((100, 50))
-#     return s
+    iterable = np.arange(1000)
+    iterable2 = np.arange(2000)
+    # tt.t
+    # s = parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=50)
+    # tt.t
+    # s = parallelize(4, func, zip(iterable, iterable), respective=True, tq=True, batch_size=50)
+    # tt.t
+    # s = parallelize(1, func, iterable, respective=False, tq=True, batch_size=50)
+    # tt.t
+    # s = parallelize(4, func, iterable, respective=False, tq=True, batch_size=50)
 
-# if __name__ == "__main__":
-#     iterable = np.arange(10000)
-#     iterable2 = np.arange(20000)
-#     tt.t
-#     s = parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000)
-#     tt.t
-#     s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000)
-#
-#     ss = parallelize_imap(2, func, iterable, tq=False)
-#     tt.t
-#     s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000, )
-#     tt.t
-#     s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, )
-#
-#     # tt.t
-#     s = parallelize(2, func, list(zip(iterable, iterable)), respective=True,
-#                     tq=True, batch_size=1000, mode="m")
-#     tt.t
-#     s = parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-#     tt.t
-#     s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=1000,
-#                           mode="m")
-#     tt.t
-#     s = batch_parallelize(2, func, iterable, respective=False, tq=True, batch_size=1000, mode="m")
-#     tt.t
-#     tt.p
-#
-#     def func2(n, j, dc=None, dp=None):
-#         # time.sleep(0.0001)
-#         s = np.random.random((100, 50))
-#         return s
-#
-#
-#     iterable = np.arange(10000)
-#     kw = [{"dc": iterable[i], "dp": iterable[i]} for i in range(len(iterable))]
-#     iterables = zip(iterable, iterable, kw)
-#     # iterables = zip(iterable,kw)
-#     tt.t
-#     s = parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j", respective_kwargs=True,desc="jobs1")
-#     tt.t
-#     tt.p
-#
-#     tt.t
-#     s = batch_parallelize(4, func2, iterables, respective=True, tq=True, batch_size=1000, mode="j",desc="jobs2",
-#                           respective_kwargs=True)
-#     tt.t
-#     tt.p
+    # tt.t
+    # s = batch_parallelize(1, func, zip(iterable, iterable), respective=True, tq=True, batch_size=100, )
+    # tt.t
+    # s = batch_parallelize(2, func, zip(iterable, iterable), respective=True, tq=True, batch_size=100, )
+    #
+    # tt.t
+    # s = batch_parallelize(1, func, iterable, respective=False, tq=True, batch_size=100, mode="m")
+    # tt.t
+    # s = batch_parallelize(4, func, iterable, respective=False, tq=True, batch_size=100, mode="m")
+    # tt.t
+    # tt.p

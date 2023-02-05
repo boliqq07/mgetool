@@ -5,6 +5,7 @@
 # @License  : GNU General Public License v3.0
 # @Author   : xxx
 import os
+
 from mgetool.imports import BatchFileMatch
 from mgetool.imports.batchfilematch import re_patten_help, shell_patten_help
 
@@ -101,7 +102,7 @@ def run(args, parser):
         fdir = "\n".join(fdir)
         f.writelines(fdir)
 
-    print("The '{}' of {} paths are stored in '{}'.".format(args.store_name, num,  str(os.getcwd())))
+    print("The '{}' of {} paths are stored in '{}'.".format(args.store_name, num, str(os.getcwd())))
     print("OK")
 
 

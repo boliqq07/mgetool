@@ -19,7 +19,6 @@ import sys
 import joblib
 import numpy as np
 import pandas as pd
-
 from tqdm import tqdm
 
 from mgetool.tool import def_pwd

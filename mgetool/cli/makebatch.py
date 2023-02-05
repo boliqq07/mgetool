@@ -61,7 +61,7 @@ def trans_str(string):
 def make_batch_from_file(path_file, cmd_arg="", cmd="", out_file_name="batch.sh", keep_path=False, run_sh=False):
     if cmd_arg != "":
         cmd = cmd_arg
-        
+
     if keep_path:
         batch_str = """#!/bin/bash
 

@@ -83,7 +83,7 @@ def main(prog='mgetool', description='mgetool command line tool.', args=None):
         except KeyboardInterrupt:
             pass
         except CLIError as x:
-            parser.error(x)
+            parser.error(str(x))
         except Exception as x:
             if args.traceback:
                 raise
@@ -92,4 +92,3 @@ def main(prog='mgetool', description='mgetool command line tool.', args=None):
                 l2 = ('To get a full traceback, use: {} -T {} ...'
                       .format(prog, args.command))
                 parser.error(l1 + l2)
-

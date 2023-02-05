@@ -9,11 +9,11 @@ Notes:
     could be quick generate class with attribute and staticmethod method.
     other methods are not suit for this.
 """
-import array
 import copy
 import warnings
 from functools import wraps
 
+import array
 import numpy
 
 class_replacers = {}

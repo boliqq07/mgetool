@@ -793,6 +793,7 @@ class TorchJitInLine:
 
     Examples
     -----------
+
     source = "
 
     #include <torch/extension.h>
@@ -838,7 +839,7 @@ class TorchJitInLine:
         self.init_path = os.getcwd()
         # check file
         if module_name == "TORCH_EXTENSION_NAME":
-            warnings.warn("please re set your module name", NameError)
+            warnings.warn("Please re set your module name", EncodingWarning)
         self.source = source
 
         if path is not None:
