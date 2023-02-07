@@ -49,7 +49,9 @@ def cluster(array: np.ndarray, tol=0.0) -> np.ndarray:
             except BaseException:
                 raise NotImplementedError(f"Not support dtype {array.dtype}.")
         change = change.astype(np.int64)
-    num = np.cumsum(change) - 1
+    num = np.cumsum(change)
+    if np.min(num)==1:
+        num = num - 1
     clu = num[array_index_iv]
     return clu
 
