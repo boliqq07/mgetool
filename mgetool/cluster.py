@@ -41,11 +41,11 @@ def cluster(array: np.ndarray, tol=0.0) -> np.ndarray:
         change[split_index] = 1
     else:
         array_sort2 = np.append(np.nan, array_sort[:-1])
-        if not isinstance(array_sort, (np.float, int)):
+        if array_sort.dtype not in (np.float64, np.float32, np.int64, np.int32, int):
             change = array_sort2 != array_sort
         else:
             try:
-                change = np.abs(array_sort2 - array_sort) < tol
+                change = np.abs(array_sort2 - array_sort) > tol
             except BaseException:
                 raise NotImplementedError(f"Not support dtype {array.dtype}.")
         change = change.astype(np.int64)
@@ -85,11 +85,11 @@ def cluster_split(array: np.ndarray, tol=0.0) -> List[np.ndarray]:
         _, split_index = np.unique(array_sort, return_index=True)
         change = split_index[1:]
     else:
-        if not isinstance(array_sort, (np.float, int)):
+        if array_sort.dtype not in (np.float64, np.float32, np.int64, np.int32, int):
             change = array_sort2 != array_sort
         else:
             try:
-                change = np.abs(array_sort2 - array_sort) < tol
+                change = np.abs(array_sort2 - array_sort) > tol
             except BaseException:
                 raise NotImplementedError(f"Not support dtype {array.dtype}.")
 
@@ -100,8 +100,8 @@ def cluster_split(array: np.ndarray, tol=0.0) -> List[np.ndarray]:
     return gps
 
 
-def coarse_and_spilt_array(array: np.ndarray, tol: float = 0.5, method: str = None,
-                           n_cluster: int = 3, reverse: bool = False) -> np.ndarray:
+def coarse_cluster_array(array: np.ndarray, tol: float = 0.5, method: str = None,
+                         n_cluster: int = 3, reverse: bool = False) -> np.ndarray:
     """
     Split 1D ndarray by distance or group.
 
