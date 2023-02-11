@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
+from typing import Union, List
+
 import path
+import pathlib
 
 
 # @Time  : 2023/2/11 15:24
@@ -7,7 +11,7 @@ import path
 # @Software: PyCharm
 # @License: MIT License
 
-def find_leaf_path(root_pt=".", abspath=False):
+def find_leaf_path(root_pt: Union[str, path.Path, os.PathLike, pathlib.Path], abspath: bool = False) -> List[path.Path]:
     """
     Find the leaf path.
 
