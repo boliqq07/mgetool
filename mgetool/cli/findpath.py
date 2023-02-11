@@ -8,6 +8,7 @@ import os
 
 from mgetool.imports import BatchFileMatch
 from mgetool.imports.batchfilematch import re_patten_help, shell_patten_help
+from mgetool.imports.leaf import find_leaf_path
 
 _dos_help = f"""寻找符合要求所有的叶节点路径, 查看参数帮助使用 -h.
 
@@ -59,36 +60,42 @@ Key 4. 多重可选匹配使用 | 或者空格划分.
 
 def run(args, parser):
     print("Collecting all Paths ...")
-
-    # situation 1
-    # if the 'match_patten_arg' is use [^...] or [!seq] just for match file name,
-    # This would find all file matched with patten in the dirs,
-    # The dirs would remain due to the file. thus the  [^...] or [!seq] (for file name) would not filter the dirs.
-    if args.match_patten_arg is None:
-        bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten, trans=args.translate)
+    if args.suffix is None and args.match_patten is None and args.match_patten_arg is None and\
+       args.dir_include is None and args.dir_exclude is None and args.file_include is None and\
+       args.file_exclude is None:
+        fdir = find_leaf_path(args.path, abspath=args.abspath)
     else:
-        bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten_arg, trans=args.translate)
 
-    print("Filter the Paths ...")
+        # situation 1
+        # if the 'match_patten_arg' is use [^...] or [!seq] just for match file name,
+        # This would find all file matched with patten in the dirs,
+        # The dirs would remain due to the file. thus the  [^...] or [!seq] (for file name) would not filter the dirs.
+        if args.match_patten_arg is None:
+            bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten, trans=args.translate)
+        else:
+            bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten_arg, trans=args.translate)
 
-    # situation 2
-    # (the parent of parent dir or more top-lever could be residual. if dir_exclude not None)
-    bf.filter_dir_name(include=args.dir_include, exclude=args.dir_exclude, layer=args.layer)
+        print("Filter the Paths ...")
 
-    # situation 1
-    # if use 'exclude' in this function, the dirs containing exclude file would remain, due to the other file in dirs.
-    # thus, exclude are set to next function.
-    bf.filter_file_name(include=args.file_include)
+        # situation 2
+        # (the parent of parent dir or more top-lever could be residual. if dir_exclude not None)
+        bf.filter_dir_name(include=args.dir_include, exclude=args.dir_exclude, layer=args.layer)
 
-    # this is the real, to delete the dirs containing exclude file.
-    bf.filter_file_name_parent_folder(exclude=args.file_exclude)
+        # situation 1
+        # if use 'exclude' in this function, the dirs containing exclude file would remain, due to the other file in dirs.
+        # thus, exclude are set to next function.
+        bf.filter_file_name(include=args.file_include)
 
-    if args.dir_exclude is not None:
-        print("Use '-ed' could result to parent folder residue. Manual check and delete is recommended.")
+        # this is the real, to delete the dirs containing exclude file.
+        bf.filter_file_name_parent_folder(exclude=args.file_exclude)
 
-    bf.merge(abspath=args.abspath)
+        if args.dir_exclude is not None:
+            print("Use '-ed' could result to parent folder residue. Manual check and delete is recommended.")
 
-    fdir = bf.get_leaf_dir()
+        bf.merge(abspath=args.abspath)
+
+        fdir = bf.get_leaf_dir()
+
     num = len(fdir)
 
     if args.not_print is True:
