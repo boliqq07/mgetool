@@ -18,6 +18,7 @@ commands_ = [
 
     ('findpath', 'mgetool.cli.findpath'),
     ('makebatch', 'mgetool.cli.makebatch'),
+    ('cpdir', 'mgetool.cli.cpdir'),
 
 ]
 

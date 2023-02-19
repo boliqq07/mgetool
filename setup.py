@@ -53,5 +53,8 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     entry_points={'console_scripts': ['mgetool = mgetool.cli.main:main', 'findpath = mgetool.cli.findpath:main',
-                                      'mt = mgetool.cli.main:main', 'makebatch = mgetool.cli.makebatch:main']}
+                                      'mt = mgetool.cli.main:main',
+                                      'cpdir = mgetool.cli.cpdir:main',
+                                      'makebatch = mgetool.cli.makebatch:main',
+                                      ]}
 )
