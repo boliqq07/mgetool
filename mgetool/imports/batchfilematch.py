@@ -70,6 +70,84 @@ def shell_to_re_compile_pattern(pat, trans=True, single=True, ):
         raise e
 
 
+class BatchPathMatch:
+    def __init__(self, path=".", patten: Union[str]=None, trans=True, abspath=False):
+        """
+
+        Parameters
+        ----------
+        path:str
+            total dir of all files.
+        patten:str
+            match patten.
+        trans: bool, default True
+            If true, use shell patten to match.
+            If False, use re patten to match.
+        """
+        self.trans = trans
+
+        self.path = Path(path)
+        if patten is not None:
+
+            dir_list = self.path.walkdirs()
+            patten = self._get_patten(patten)
+            self.file_dir = list(self.filter(dir_list, pat=patten, trans=self.trans))
+
+        else:
+            self.file_dir = list(self.path.walkdirs())
+        if abspath:
+            self.file_dir  = self.dir_relpath()
+
+    @staticmethod
+    def _get_patten(my_strs):
+        if my_strs is not None and " " in my_strs:
+            my_strs = str(my_strs).replace("|", " ")
+            my_strs = my_strs.split(" ")
+            my_strs = [i for i in my_strs if i not in ["", " "]]
+        else:
+            pass
+
+        if isinstance(my_strs, (tuple, list)):
+            if len(my_strs) >= 2:
+                my_strs = "|".join(my_strs)
+            elif len(my_strs) == 1:
+                my_strs = my_strs[0]
+            else:
+                raise NotImplementedError
+        else:
+            pass
+        return my_strs
+
+    @staticmethod
+    def filter(names, pat, trans=True):
+        smatch = shell_to_re_compile_pattern(pat, trans=trans).search
+        return [ni for ni in names if smatch(ni) is not None]
+
+    def get_leaf_dir(self, dirs=None):
+        """Get the leaf dirs. Remove "." path."""
+
+        # The ../paths could be wrong!
+
+        if dirs is None:
+            dirs = self.file_dir
+
+        dirs = [i for i in dirs if i not in (".", "./")]
+        dirs_text = "\n".join(dirs)
+        index = [dirs_text.count(i) - 1 for i in dirs]
+        dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
+        return dirs
+
+    def dir_relpath(self, path=None):
+        """Get the real-path to input path."""
+        if path is None:
+            path = self.path
+        else:
+            path = Path(path)
+
+        self.file_dir = [i.relpath(path) for i in self.file_dir]
+
+
+
 class BatchFileMatch:
     r"""
     Search files and filter files and re-site files with patten match.
@@ -171,6 +249,7 @@ class BatchFileMatch:
         else:
             pass
         return my_strs
+
 
     def filter_file_name_parent_folder(self, exclude=None):
         """
@@ -337,6 +416,7 @@ class BatchFileMatch:
 
     def merge(self, abspath=False, force_relpath=False):
         """Merge dir and file name together, Get dir names."""
+
         if abspath:
             self.file_list = [i.abspath() for i in self.file_list]
         else:

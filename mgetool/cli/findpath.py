@@ -7,8 +7,8 @@
 import os
 
 from mgetool.imports import BatchFileMatch
-from mgetool.imports.batchfilematch import re_patten_help, shell_patten_help
-from mgetool.imports.leaf import find_leaf_path
+from mgetool.imports.batchfilematch import re_patten_help, shell_patten_help, BatchPathMatch
+
 
 _dos_help = f"""寻找符合要求所有的叶节点路径, 查看参数帮助使用 -h.
 
@@ -60,10 +60,17 @@ Key 4. 多重可选匹配使用 | 或者空格划分.
 
 def run(args, parser):
     print("Collecting all Paths ...")
-    if args.suffix is None and args.match_patten is None and args.match_patten_arg is None and\
+    if args.suffix is None and\
        args.dir_include is None and args.dir_exclude is None and args.file_include is None and\
        args.file_exclude is None:
-        fdir = find_leaf_path(args.path, abspath=args.abspath)
+
+        if args.match_patten_arg is None:
+            bf = BatchPathMatch(args.path, patten=args.match_patten, trans=args.translate,
+                                abspath=args.abspath)
+        else:
+            bf = BatchPathMatch(args.path, patten=args.match_patten_arg, trans=args.translate,
+                                abspath=args.abspath)
+
     else:
 
         # situation 1
@@ -94,7 +101,10 @@ def run(args, parser):
 
         bf.merge(abspath=args.abspath)
 
+    if not args.parent:
         fdir = bf.get_leaf_dir()
+    else:
+        fdir = bf.file_dir
 
     num = len(fdir)
 
@@ -133,6 +143,7 @@ class CLICommand:
         parser.add_argument('-o', '--store_name', help='out file name, default paths.temp.', type=str,
                             default="paths.temp")
         parser.add_argument('-np', '--not_print', help='not print.', action="store_false")
+        parser.add_argument('-parent', '--parent', help='with parent or not.', action="store_true")
 
     @staticmethod
     def parse_args(parser):
