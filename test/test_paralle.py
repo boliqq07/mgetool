@@ -39,7 +39,7 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
 
     def test_j(self):
@@ -71,7 +71,7 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
     def test_apply(self):
 
@@ -92,7 +92,7 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
         ss, pool = parallelize(2, func, zip(iterable, iterable2), respective=True,
                         respective_kwargs=False, tq=False, mode="apply_async", desc="s",lazy=True)
@@ -100,20 +100,20 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
         ss, pool = parallelize(2, func, zip(iterable, iterable2), respective=True, tq=True,mode="apply_async",desc="s",lazy=True)
 
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
         ss, pool = parallelize(2, func, iterable, respective=False, tq=True,mode="apply_async",desc="s",lazy=True)
 
 
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
     def test_map_star(self):
 
@@ -130,7 +130,7 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
         ss, pool = parallelize(2, func, zip(iterable, iterable2), respective=True, tq=True,
                                mode="starmap_async", desc="s", lazy=True)
@@ -138,13 +138,13 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
         ss, pool = parallelize(2, func, iterable, respective=False, tq=True, mode="map_async", desc="s", lazy=True)
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
 
     def test_batch_j(self):
@@ -176,7 +176,7 @@ class MyTestCase(unittest.TestCase):
         ss = [ssi for ssi in ss]
 
         pool.close()
-        pool._join()
+        pool.join()
 
 
 
