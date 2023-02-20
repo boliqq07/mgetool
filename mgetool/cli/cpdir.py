@@ -31,7 +31,7 @@ def _copy_user(i, j, force=False):
         shutil.copy(i, j)
 
 
-def copyfile(oldpath, newpath, oldpaths, force=False, z=False, mv=True):
+def copyfile(oldpath, newpath, oldpaths, force=False, z=False, mv=True, zn="temp"):
 
     oldpath = Path(oldpath).abspath()
     oldpaths2 = [oldpath.relpathto(Path(i).abspath()) for i in oldpaths]
@@ -56,7 +56,7 @@ def copyfile(oldpath, newpath, oldpaths, force=False, z=False, mv=True):
     if z:
         try:
             ff = " ".join(oldpaths2)
-            os.system(f"tar -zcvf temp.tar.gz {ff}")
+            os.system(f"tar -zcvf {zn}.tar.gz {ff}")
         except BaseException as e:
             print(e)
 
@@ -73,6 +73,7 @@ class CLICommand:
         parser.add_argument('-force', '--force', help='disk exist cover.', action="store_true")
         parser.add_argument('-z', '--z', help='tar.gz.', action="store_true")
         parser.add_argument('-m', '--m', help='move.', action="store_true")
+        parser.add_argument('-zn', '--zn', help='zip name.', type=str, default="temp")
 
 
     @staticmethod
@@ -95,7 +96,7 @@ class CLICommand:
             return
         w = [i.rstrip() for i in w]
 
-        copyfile(args.old_path, new_path, w, args.force, z=args.z, mv=args.m)
+        copyfile(args.old_path, new_path, w, args.force, z=args.z, mv=args.m, zn=args.zn)
 
     @staticmethod
     def parse_args(parser):
