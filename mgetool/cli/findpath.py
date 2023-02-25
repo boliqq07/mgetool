@@ -63,6 +63,7 @@ def run(args, parser):
     if args.suffix is None and\
        args.dir_include is None and args.dir_exclude is None and args.file_include is None and\
        args.file_exclude is None:
+        print("simple version...")
 
         if args.match_patten_arg is None:
             bf = BatchPathMatch(args.path, patten=args.match_patten, trans=args.translate,
