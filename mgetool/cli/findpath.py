@@ -107,6 +107,9 @@ def run(args, parser):
     else:
         fdir = bf.file_dir
 
+    if args.reverse:
+        fdir.reverse()
+
     num = len(fdir)
 
     if args.not_print is True:
@@ -145,6 +148,7 @@ class CLICommand:
                             default="paths.temp")
         parser.add_argument('-np', '--not_print', help='not print.', action="store_false")
         parser.add_argument('-parent', '--parent', help='with parent or not.', action="store_true")
+        parser.add_argument('-r', '--reverse', help='reverse the list.', action="store_true")
 
     @staticmethod
     def parse_args(parser):

@@ -98,6 +98,8 @@ class BatchPathMatch:
         if abspath:
             self.file_dir  = self.dir_relpath()
 
+        self.file_dir.sort()
+
     @staticmethod
     def _get_patten(my_strs):
         if my_strs is not None and " " in my_strs:
@@ -135,6 +137,7 @@ class BatchPathMatch:
         dirs_text = "\n".join(dirs)
         index = [dirs_text.count(i) - 1 for i in dirs]
         dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
+
         return dirs
 
     def dir_relpath(self, path=None):
@@ -207,6 +210,7 @@ class BatchFileMatch:
                 self.file_list = list(self.path.walkfiles())
 
         self.file_dir = []
+        self.file_dir.sort()
         self._rm_check = 0
 
     def __repr__(self):
@@ -429,6 +433,8 @@ class BatchFileMatch:
         file_dir = list((set([i.parent for i in self.file_list])))
         file_dir.sort()
         self.file_dir = file_dir
+        self.file_list.sort()
+        self.file_dir.sort()
         return self.file_list
 
     def relpathto(self, path=None):
