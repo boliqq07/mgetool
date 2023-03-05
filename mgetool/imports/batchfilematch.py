@@ -537,7 +537,7 @@ class BatchFileMatch:
                 self._rm_check += 1
 
     def get_leaf_dir(self, dirs=None):
-        """Get the leaf dirs. Remove "." path."""
+        """Get the leaf dirs."""
 
         # The ../paths could be wrong!
 
