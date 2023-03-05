@@ -684,7 +684,7 @@ class BuildTree:
             num_dict = {}
 
         for k, ti in enumerate(self.sub_tree):
-            ini2 = (tuple(list(ini[0]) + [k]), tuple(list(ini[1]) + [ti.name]))
+            ini2 = (tuple(list(ini[0]) + [k]), tuple(list(ini[1]) + [ti.name,]))
             num_dict.update({num: ini2})
             # self.num = num
             num += 1
@@ -718,11 +718,11 @@ class BuildTree:
         self.get_line()
 
     def get_plt(self, text: bool = False, mark: bool = False, linewidth: float = 1.0, text_site="center",
-                text_msg="num", text_size=15,
-                mark_size: float = 200, mark_size_method: str = "auto", mark_layer=(), text_layer=(), ) -> plt:
+                text_msg="num", text_size=15, mark_size: float = 200, mark_size_method: str = "auto",
+                mark_layer=(), mark_alpha="mean", text_layer=(), ) -> plt:
         """Plot tree.
-        0,  1,  2,  3,  4,    5,         6, 7,          8, 9, 10, 11,    12,    13,
-        x0, y0, x1, y1, mark, mark_size, w, line_style, R, G, B,  alpha, layer, name
+        0,  1,  2,  3,  4,         5,         6, 7,          8, 9, 10, 11,    12,    13,
+        x0, y0, x1, y1, mark_type, mark_size, w, line_style, R, G, B,  alpha, layer, name
         """
 
         def func_text(ri, ni):
@@ -738,6 +738,10 @@ class BuildTree:
         rank = np.arange(res.shape[0]) + 1
         data = res[:, :-1].astype(float)
         names = res[:, -1]
+        if mark_alpha == "max":
+            ma = 5
+        else:
+            ma = 6
 
         mk = [".", "o", "^", "x", "+", "*", "s"]
 
@@ -762,10 +766,10 @@ class BuildTree:
             if la in mark_layer:
                 if mark:
                     if mark_size_method == "auto":
-                        s = (0.1 + resi[5]) * mark_size
+                        s = (0.01 + resi[5]) * mark_size
                     else:
                         s = mark_size
-                    plt.scatter(resi[2], resi[3], c="grey", s=s, marker=mk[int(resi[4])], alpha=resi[5])
+                    plt.scatter(resi[2], resi[3], c="k", s=s, marker=mk[int(resi[4])], alpha=resi[ma]**2)
             if la in text_layer:
                 if text and text_site != "center":
                     plt.text(resi[2], resi[3], func_text(ri, ni), size=text_size)
@@ -774,10 +778,10 @@ class BuildTree:
         if 0 in mark_layer:
             if mark:
                 if mark_size_method == "auto":
-                    s = (0.1 + data[0, 5]) * mark_size
+                    s = (0.01 + data[0, 5]) * mark_size
                 else:
                     s = mark_size
-                plt.scatter(self.root[0], self.root[1], c="grey", s=s, marker=mk[int(data[0, 4])], alpha=data[0, 5])
+                plt.scatter(self.root[0], self.root[1], c="k", s=s, marker=mk[int(data[0, 4])], alpha=data[0, ma]**2)
         if 0 in text_layer:
             if text:
                 plt.text(self.root[0], self.root[1], func_text(0, self.name), size=text_size)
