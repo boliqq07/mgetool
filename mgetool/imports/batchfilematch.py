@@ -133,12 +133,16 @@ class BatchPathMatch:
         if dirs is None:
             dirs = self.file_dir
 
-        dirs = [i for i in dirs if i not in (".", "./")]
-        dirs_text = "\n".join(dirs)
-        index = [dirs_text.count(i) - 1 for i in dirs]
-        dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
+        par_disk = [i.parent for i in dirs]
 
-        return dirs
+        par_disk = set(par_disk)
+
+        res = set(dirs) - par_disk
+
+        res = list(res)
+        res.sort()
+
+        return res
 
     def dir_relpath(self, path=None):
         """Get the real-path to input path."""
@@ -540,10 +544,15 @@ class BatchFileMatch:
         if dirs is None:
             dirs = self.file_dir
 
-        dirs = [i for i in dirs if i not in (".", "./")]
-        dirs_text = "\n".join(dirs)
-        index = [dirs_text.count(i) - 1 for i in dirs]
-        dirs = [dirs[n] for n, i in enumerate(index) if i == 0]
+        par_disk = [i.parent for i in dirs]
+
+        par_disk = set(par_disk)
+
+        res = set(dirs) - par_disk
+
+        res = list(res)
+        res.sort()
+
         return dirs
 
 # if __name__=="__main__":
