@@ -79,6 +79,7 @@ def run(args, parser):
         # This would find all file matched with patten in the dirs,
         # The dirs would remain due to the file. thus the  [^...] or [!seq] (for file name) would not filter the dirs.
         if args.match_patten_arg is None:
+            print("Suggest with -t !")
             bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten, trans=args.translate)
         else:
             bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten_arg, trans=args.translate)
