@@ -613,7 +613,7 @@ class BuildTree:
         res.extend(self._all_sub_nodes())
         return res
 
-    def get_nodes(self, num: int = 0, branch: Tuple = None, method="node2leafs"):
+    def get_nodes(self, num: int=None, branch: Union[Tuple, List] = None, method="node2leafs"):
 
         temp, res = self.get_node_linear(num=num, branch=branch)
         if method == "node":
@@ -658,6 +658,19 @@ class BuildTree:
         see also: get_branch"""
         res = self.get_nodes(num=num, branch=branch, method=method)
         [setattr(i, name, value) for i in res]
+
+    def set_nodes_w(self, w, num: int = None, branch: Tuple = None,
+                        method="node", index=(3, 4, 9)) -> None:
+        """Set the array property of the node in the branch, (the node could not be leaf node).
+        if total, set the all node from the root to target node.
+        see also: get_branch"""
+        res = self.get_nodes(num=num, branch=branch, method=method)
+
+        for resi in res:
+            array = resi.array
+            array[list(index)] = w
+            resi.array = array
+
 
     def set_nodes_site(self, site: Union[np.ndarray, List[float]], num: int = None, branch: Tuple = None,
                        method="node2leafs",
