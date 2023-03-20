@@ -141,8 +141,8 @@ class CLICommand:
         parser.add_argument('-ef', '--file_exclude', help='exclude file name.', type=str, default=None)
         parser.add_argument('-id', '--dir_include', help='include dir name.', type=str, default=None)
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
-        parser.add_argument('-t', '--translate', help='If True, use shell patten, If False, use re patten to match.',
-                            action="store_false")
+        parser.add_argument('-t', '--translate', help='If False, use shell patten, If True, use re patten to match.',
+                            action="store_true")
         parser.add_argument('-l', '--layer', help='dir depth,default the last layer.', type=str, default="-1")
         parser.add_argument('-abs', '--abspath', help='return abspath.', action="store_true")
         parser.add_argument('-o', '--store_name', help='out file name, default paths.temp.', type=str,

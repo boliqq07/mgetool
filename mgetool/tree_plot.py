@@ -758,6 +758,17 @@ class BuildTree:
 
         mk = [".", "o", "^", "x", "+", "*", "s"]
 
+        if 0 in mark_layer:
+            if mark:
+                if mark_size_method == "auto":
+                    s = (0.01 + data[0, 5]) * mark_size
+                else:
+                    s = mark_size
+                plt.scatter(self.root[0], self.root[1], c="k", s=s, marker=mk[int(data[0, 4])], alpha=data[0, ma]**2)
+        if 0 in text_layer:
+            if text:
+                plt.text(self.root[0], self.root[1], func_text(0, self.name), size=text_size)
+
         for resi, ri, ni in zip(data, rank, names):
             la = int(resi[-1])
 
@@ -788,16 +799,7 @@ class BuildTree:
                     plt.text(resi[2], resi[3], func_text(ri, ni), size=text_size)
                 elif text:
                     plt.text((resi[0] + resi[2]) / 2, (resi[1] + resi[3]) / 2, func_text(ri, ni), size=text_size)
-        if 0 in mark_layer:
-            if mark:
-                if mark_size_method == "auto":
-                    s = (0.01 + data[0, 5]) * mark_size
-                else:
-                    s = mark_size
-                plt.scatter(self.root[0], self.root[1], c="k", s=s, marker=mk[int(data[0, 4])], alpha=data[0, ma]**2)
-        if 0 in text_layer:
-            if text:
-                plt.text(self.root[0], self.root[1], func_text(0, self.name), size=text_size)
+
 
         return plt
 
