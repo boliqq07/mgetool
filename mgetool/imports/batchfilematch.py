@@ -96,9 +96,9 @@ class BatchPathMatch:
         else:
             self.file_dir = list(self.path.walkdirs())
         if abspath:
-            self.file_dir  = self.dir_relpath()
-
-        self.file_dir.sort()
+            self.dir_abspath()
+        if len(self.file_dir)>1:
+            self.file_dir.sort()
 
     @staticmethod
     def _get_patten(my_strs):
@@ -152,6 +152,11 @@ class BatchPathMatch:
             path = Path(path)
 
         self.file_dir = [i.relpath(path) for i in self.file_dir]
+
+    def dir_abspath(self, path=None):
+        """Get the real-path to input path."""
+
+        self.file_dir = [i.abspath() for i in self.file_dir]
 
 
 
