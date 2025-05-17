@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mgetool"
@@ -8,7 +8,7 @@ version = "0.0.67"
 description = "This is an tool box contains tools for mgedata. Some of code are non-originality, just copy for use. All the referenced code are marked, details can be shown in their sources"
 readme = "README.md"
 requires-python = ">=3.6"
-license = "BSD-3-Clause"
+license = {text = "BSD-3-Clause"}
 authors = [
     {name = "wangchangxin", email = "986798607@qq.com"},
 ]
