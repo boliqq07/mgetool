@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mgetool"
+version = "0.0.67"
+description = "This is an tool box contains tools for mgedata. Some of code are non-originality, just copy for use. All the referenced code are marked, details can be shown in their sources"
+readme = "README.md"
+requires-python = ">=3.6"
+license = "BSD-3-Clause"
+authors = [
+    {name = "wangchangxin", email = "986798607@qq.com"},
+]
+maintainers = [
+    {name = "wangchangxin"},
+]
+keywords = ["exports", "imports", "show", "tool", "newclass", "packbox", "draft", "path"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pandas",
+    "numpy",
+    "sympy",
+    "scipy",
+    "joblib",
+    "matplotlib",
+    "path",
+    "seaborn",
+    "requests",
+    "tqdm",
+    "six",
+]
+
+[project.scripts]
+mgetool = "mgetool.cli.main:main"
+findpath = "mgetool.cli.findpath:main"
+mt = "mgetool.cli.main:main"
+cpdir = "mgetool.cli.cpdir:main"
+makebatch = "mgetool.cli.makebatch:main"
+cptodirs = "mgetool.cli.cptodirs:main"
+batchpy = "mgetool.cli.batchpy:main"
+
+[tool.setuptools]
+include-package-data = true
+packages = {find = {exclude = ["*.tests", "*.tests.*", "tests.*", "tests", "test", "instance", "Instance"]}}

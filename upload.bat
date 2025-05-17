@@ -6,7 +6,8 @@ set path=C:\Users\Administrator\anaconda3\Scripts;C:\Users\Administrator\anacond
 set path=C:\ProgramData\Anaconda3;C:\ProgramData\Anaconda3\Library\bin;%path%
 set path=C:\ProgramData\Anaconda3\Scripts;C:\ProgramData\Anaconda3\condabin;%path%
 path
-python setup.py sdist
+
+python -m build
 
 twine check dist/*
 
