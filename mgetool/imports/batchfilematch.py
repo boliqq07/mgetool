@@ -15,32 +15,32 @@ from path import Path
 
 # patten >>>>>
 shell_patten_help = r"""
-(通配符字符串,使用''包裹,如'*.ext').
+    (通配符字符串, 使用''包裹, 如'*.ext').
 
-*       匹配任意字符.
-?       匹配任意单个字符.
-[seq]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
-[!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符. (不建议使用)
+    *       匹配任意字符.
+    ?       匹配任意单个字符.
+    [seq]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
+    [!seq]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符. (不建议使用)
 """
 
 # patten >>>>>
 re_patten_help = r"""
-(通配符字符串,使用''包裹,如'.*.ext')
+    (通配符字符串, 使用''包裹, 如'.*.ext')
 
-.       匹配任意字符,除了换行符.
-*       (不可单独使用，前面需有字符)
-re*     匹配0个或多个的表达式.
-re+     匹配1个或多个的表达式.
-re?     匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
-a|b     匹配a或b.
-\w      匹配字母数字及下划线.
-\W      匹配非字母数字及下划线.
-\s      匹配任意空白字符.
-\S      匹配任意非空字符.
-\d      匹配任意数字,等价于 [0-9].
-\D      匹配任意非数字.
-[...]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
-[^...]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.  (不建议使用)
+    .       匹配任意字符,除了换行符.
+    *       (不可单独使用，前面需有字符)
+    re*     匹配0个或多个的表达式.
+    re+     匹配1个或多个的表达式.
+    re?     匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.
+    a|b     匹配a或b.
+    \w      匹配字母数字及下划线.
+    \W      匹配非字母数字及下划线.
+    \s      匹配任意空白字符.
+    \S      匹配任意非空字符.
+    \d      匹配任意数字,等价于 [0-9].
+    \D      匹配任意非数字.
+    [...]   用来表示一组字符,单独列出：[amk] 匹配 'a','m'或'k'.
+    [^...]  不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符.  (不建议使用)
 """
 
 
@@ -51,18 +51,18 @@ def shell_to_re_compile_pattern(pat, trans=True, single=True, ):
             res = translate(pat)
             if single is False:
                 res = res.replace("?s:", "?m:")
-                res = res.replace("\Z", "")
+                res = res.replace(r"\Z", "")
         else:
             res = pat
         return re.compile(res)
     except BaseException as e:
         print("-------------------------\n"
-              "1. If trans==False (default) >>> ``re laws``\n"
+              "1. If trans==False (-t) >>> ``re laws``\n"
               "----re module help-------")
         print(re_patten_help)
         print("More: https://docs.python.org/3/library/re.html?highlight=re#module-re\n\n"
               "-------------------------\n"
-              "2. If trans==True (-t) >>> ``linux shell laws``\n"
+              "2. If trans==True >>> ``linux shell laws``\n"
               "---shell module help-----")
         print(shell_patten_help)
         print("------------------------\n")
@@ -153,11 +153,10 @@ class BatchPathMatch:
 
         self.file_dir = [i.relpath(path) for i in self.file_dir]
 
-    def dir_abspath(self, path=None):
+    def dir_abspath(self,):
         """Get the real-path to input path."""
 
-        self.file_dir = [i.abspath() for i in self.file_dir]
-
+        self.file_dir = [i.absolute() for i in self.file_dir]
 
 
 class BatchFileMatch:
@@ -431,7 +430,7 @@ class BatchFileMatch:
         """Merge dir and file name together, Get dir names."""
 
         if abspath:
-            self.file_list = [i.abspath() for i in self.file_list]
+            self.file_list = [i.absolute() for i in self.file_list]
         else:
             if force_relpath:
                 self.file_list = [i.relpath(".") for i in self.file_list]

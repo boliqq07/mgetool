@@ -17,12 +17,12 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='mgetool',
-    version='0.0.66',
+    version='0.0.67',
     keywords=["exports", "imports", "show", "tool", "newclass", "packbox", "draft", "path"],
     description='This is an tool box contains tools for mgedata.'
                 'Some of code are non-originality, just copy for use. All the referenced code are marked,'
                 'details can be shown in their sources',
-    install_requires=['pandas', 'numpy', 'sympy', 'scipy', 'joblib', 'matplotlib', "path",
+    install_requires=['pandas', 'numpy', 'sympy', 'scipy', 'joblib', 'matplotlib', "path","pathlib",
                       'seaborn', 'requests', 'tqdm', 'six'],
     include_package_data=True,
     author='wangchangxin',
@@ -56,5 +56,7 @@ setup(
                                       'mt = mgetool.cli.main:main',
                                       'cpdir = mgetool.cli.cpdir:main',
                                       'makebatch = mgetool.cli.makebatch:main',
+                                      'cptodirs = mgetool.cli.cptodirs:main',
+                                      'batchpy = mgetool.cli.batchpy:main',
                                       ]}
 )

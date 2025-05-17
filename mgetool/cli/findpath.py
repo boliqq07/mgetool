@@ -5,52 +5,53 @@
 # @License  : GNU General Public License v3.0
 # @Author   : xxx
 import os
+import pathlib
 
 from mgetool.imports import BatchFileMatch
 from mgetool.imports.batchfilematch import re_patten_help, shell_patten_help, BatchPathMatch
 
 
-_dos_help = f"""寻找符合要求所有的叶节点路径, 查看参数帮助使用 -h.
+_dos_help = f"""寻找符合要求所有的叶节点路径.
 
 运行方式: (1) findpath ... (2) mt findpath ... (3) mgetool findpath ...
 
-Key 1. 如果有字符串名字使用任何的 *,$ 等匹配字符,请使用单引号 ’‘ 包裹字符串,否则可以省略.
+Key 1. 如果有字符串名字使用任何的 * $ 等匹配字符, 请使用单引号 '' 包裹字符串, 否则引号可以省略.
 
-    （若不包裹,通配字符首先由系统shell解释,再传递到python, 请确定您知悉自己的操作目的再作决定.）
+    (若不包裹, 通配字符首先由系统shell解释, 再传递到python, 请确定您知悉自己的操作目的再作决定.)
 
-    匹配包含任意xml文件的路径
+    S1. 匹配包含任意xml文件的路径:
     $ findpath -if '*.xml'
     
-    匹配/home/dir_name下,包含POSCAR文件的子路径
+    S2. 匹配/home/dir_name下, 包含POSCAR文件的子路径:
     $ findpath -p /home/dir_name -if POSCAR
     
-    匹配路径名称包含my_dir1,不包含my_dir2路径, -l 0 代表全路径（不包含文件名）
+    S3. 匹配路径名称包含my_dir1,不包含my_dir2路径, -l 0 代表全路径（不包含文件名）:
     $ findpath -id my_dir1 -ed my_dir2 -l 0
     
-Key 2. 默认参数采用全路径（包含文件名）匹配,与传统shell一致.
+Key 2. 默认参数采用全路径（包含文件名）匹配, 与传统shell一致.
 
-    匹配包含任意xml文件的路径
+    S4. 匹配包含任意xml文件的路径:
     $ findpath './*/*/POSCAR'
     
-Key 3. 通配符选择使用解析方式默认为linux shell 方式,可使用 -t 切换为 python re 模块解析.
-    其功能更加强大复杂,需要对python re 模块有一定的了解.
+Key 3. 通配符选择使用解析方式 linux shell 默认为方式, 可使用 -t 切换为 python re 模块解析.
+    需要对 python re 模块有一定的了解.
 
     Shell Patten >>>
     {shell_patten_help}
-    Re    Patten >>>
+    Re    Patten （with -t） >>>
     {re_patten_help}
     Patten       <<<
 
 Key 4. 多重可选匹配使用 | 或者空格划分.
 
-    匹配包含倒数三层文件夹,出现ini_opt名称的路径.
+    S5. 匹配包含倒数三层文件夹,出现ini_opt名称的路径:
     $ findpath -id ini_opt  -l '-3 -2 -1'
 
-    匹配（默认最后一层文件夹）出现ini_opt或者ini_static的路径
+    S6. 匹配(默认最后一层文件夹)出现ini_opt或者ini_static的路径:
     $ findpath -id 'ini_opt|ini_static' -t
     
-注1：后续可使用命令：makebatch 创建批处理脚本,并自定义.
-注2：复杂功能实现,请使用python交互模式或python脚本：
+注1：后续可使用命令: makebatch 创建批处理脚本, 并自定义处理命令.
+注2：复杂功能实现, 请python脚本：
 
     >>> from mgetool.imports import BatchFileMatch
     >>> bf = BatchFileMatch()
@@ -79,7 +80,6 @@ def run(args, parser):
         # This would find all file matched with patten in the dirs,
         # The dirs would remain due to the file. thus the  [^...] or [!seq] (for file name) would not filter the dirs.
         if args.match_patten_arg is None:
-            print("Suggest with -t !")
             bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten, trans=args.translate)
         else:
             bf = BatchFileMatch(args.path, suffix=args.suffix, patten=args.match_patten_arg, trans=args.translate)
@@ -119,6 +119,8 @@ def run(args, parser):
     print("Write Out File ...")
 
     os.chdir(args.path)
+    
+    pathlib.Path(args.store_name).parent.mkdir(parents=True, exist_ok=True)
 
     with open(str(args.store_name), mode="w") as f:
         fdir = "\n".join(fdir)
@@ -141,9 +143,9 @@ class CLICommand:
         parser.add_argument('-ef', '--file_exclude', help='exclude file name.', type=str, default=None)
         parser.add_argument('-id', '--dir_include', help='include dir name.', type=str, default=None)
         parser.add_argument('-ed', '--dir_exclude', help='exclude dir name.', type=str, default=None)
-        parser.add_argument('-t', '--translate', help='If True, offer shell patten, If False, offer re patten to match.',
-                            action="store_true")
-        parser.add_argument('-l', '--layer', help='dir depth,default the last layer.', type=str, default="-1")
+        parser.add_argument('-t', '--translate', help='If not use, offer shell patten, If use, offer python re patten to match.',
+                            action="store_false")
+        parser.add_argument('-l', '--layer', help='dir depth, default the last layer.', type=str, default="-1")
         parser.add_argument('-abs', '--abspath', help='return abspath.', action="store_true")
         parser.add_argument('-o', '--store_name', help='out file name, default paths.temp.', type=str,
                             default="paths.temp")

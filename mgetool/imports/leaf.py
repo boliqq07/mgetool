@@ -29,7 +29,7 @@ def find_leaf_path(root_pt: Union[str, path.Path, os.PathLike, pathlib.Path], ab
     sub_disk = list(root_pt.walkdirs())
 
     if abspath:
-        sub_disk = [i.abspath() for i in sub_disk]
+        sub_disk = [i.absolute() for i in sub_disk]
 
     par_disk = [i.parent for i in sub_disk]
 

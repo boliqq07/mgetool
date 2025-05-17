@@ -10,7 +10,7 @@ from path import Path
 # @Software: PyCharm
 # @License: MIT License
 
-_dos_help = r"""根据路径文件,复制文件夹到新路径下, 查看帮助使用 -h.
+_dos_help = r"""根据路径文件, 复制文件夹到新路径下, 查看帮助使用 -h.
 复制多个文件夹到新位置。
 
 1.
@@ -35,11 +35,11 @@ def _copy_user(i, j, force=False):
 
 def copyfile(oldpath, newpath, oldpaths, force=False, z=False, mv=True, zn="temp"):
 
-    oldpath = Path(oldpath).abspath()
-    oldpaths2 = [oldpath.relpathto(Path(i).abspath()) for i in oldpaths]
+    oldpath = Path(oldpath).absolute()
+    oldpaths2 = [oldpath.relpathto(Path(i).absolute()) for i in oldpaths]
 
     if mv:
-        newpath = Path(newpath).abspath()
+        newpath = Path(newpath).absolute()
         newpaths = [Path.joinpath(newpath, i) for i in oldpaths2]
 
         for i, j in zip(oldpaths, newpaths):

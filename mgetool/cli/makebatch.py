@@ -7,9 +7,9 @@
 import os
 import pathlib
 
-_dos_help = r"""根据路径文件,创建循环命令, 查看帮助使用 -h.
-可以配合 mgetool findpath 使用,先 findpath 查找路径,再 makebatch 创建循环脚本.
-复杂sh脚本也可以使用该脚本创建,再手动修改具体操作命令.
+_dos_help = r"""根据路径文件, 创建循环命令.
+可以配合 mgetool findpath 使用, 先 findpath 查找路径,再 makebatch 创建循环脚本.
+复杂sh脚本也可以使用该脚本创建, 再手动修改具体操作命令.
 
 运行方式1:
 
