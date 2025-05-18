@@ -2,7 +2,7 @@
 import os
 import shutil
 
-from path import Path
+from pathlib import Path
 
 
 # @Time  : 2023/2/20 3:13
@@ -36,7 +36,7 @@ def _copy_user(i, j, force=False):
 def copyfile(oldpath, newpath, oldpaths, force=False, z=False, mv=True, zn="temp"):
 
     oldpath = Path(oldpath).absolute()
-    oldpaths2 = [oldpath.relpathto(Path(i).absolute()) for i in oldpaths]
+    oldpaths2 = [oldpath.relative_to(Path(i).absolute()) for i in oldpaths]
 
     if mv:
         newpath = Path(newpath).absolute()
