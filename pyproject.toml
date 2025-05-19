@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mgetool"
-version = "0.0.69"
+version = "0.0.70"
 description = "This is an tool box contains tools for mgedata. Some of code are non-originality, just copy for use. All the referenced code are marked, details can be shown in their sources"
 readme = "README.md"
 requires-python = ">=3.6"
