@@ -476,6 +476,7 @@ class BatchFileMatch:
                 pass
             else:
                 try:
+                    # print(layer)
 
                     if layer is None or layer == 0:  # 全目录匹配
                         file_dir = [i.parent for i in self.file_list]
@@ -490,13 +491,17 @@ class BatchFileMatch:
                                 file_dir.append("")
                         
                     elif isinstance(layer, (tuple, list)):  # 匹配多层目录
-                        file_dir = [i.parent.parts() for i in self.file_list]
+
+                        file_dir = []
                         for i in self.file_list:
+                            i = i.parent.parts
                             try:
                                 file_dir.append([i[ll] for ll in layer])
-                            except IndexError:
+                            except IndexError as e:
+
                                 file_dir.append([])
                         file_dir = ["/".join(i) for i in file_dir]
+
                     else:
                         raise NotImplementedError("Wrong type of 'layer'.")
                 except IndexError as e:
