@@ -482,10 +482,21 @@ class BatchFileMatch:
                     elif layer == -1:  # 匹配最后一层目录
                         file_dir = [i.parent.name for i in self.file_list]
                     elif isinstance(layer, int):  # 匹配单层目录
-                        file_dir = [i.parent.parts[layer] for i in self.file_list]
+                        file_dir = []
+                        for i in self.file_list:
+                            try:
+                                file_dir.append(i.parent.parts[layer])
+                            except IndexError:
+                                file_dir.append("")
+                        
                     elif isinstance(layer, (tuple, list)):  # 匹配多层目录
                         file_dir = [i.parent.parts() for i in self.file_list]
-                        file_dir = ["/".join([i[ll] for ll in layer]) for i in file_dir]
+                        for i in self.file_list:
+                            try:
+                                file_dir.append([i[ll] for ll in layer])
+                            except IndexError:
+                                file_dir.append([])
+                        file_dir = ["/".join(i) for i in file_dir]
                     else:
                         raise NotImplementedError("Wrong type of 'layer'.")
                 except IndexError as e:
