@@ -15,7 +15,7 @@ authors = [
 maintainers = [
     {name = "wangchangxin"},
 ]
-keywords = ["exports", "imports", "show", "tool", "newclass", "packbox", "draft", "path"]
+keywords = ["exports", "imports", "show", "tool", "newclass", "packbox", "draft"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -35,7 +35,6 @@ dependencies = [
     "scipy",
     "joblib",
     "matplotlib",
-    "path>=17.0.0",
     "seaborn",
     "requests",
     "tqdm",

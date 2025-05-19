@@ -60,18 +60,18 @@ Key 4. 多重可选匹配使用 | 或者空格划分.
 
 
 def run(args, parser):
-    print("Collecting all Paths ...")
+    print("\nCollecting all Paths ...")
     if args.suffix is None and\
        args.dir_include is None and args.dir_exclude is None and args.file_include is None and\
        args.file_exclude is None:
-        print("simple version...")
+        print("Simple version...")
 
         if args.match_patten_arg is None:
             bf = BatchPathMatch(args.path, patten=args.match_patten, trans=args.translate,
-                                abspath=args.abspath)
+                                abspath=args.abspath,relpath=args.relpath)
         else:
             bf = BatchPathMatch(args.path, patten=args.match_patten_arg, trans=args.translate,
-                                abspath=args.abspath)
+                                abspath=args.abspath,relpath=args.relpath)
 
     else:
 
@@ -101,7 +101,9 @@ def run(args, parser):
         if args.dir_exclude is not None:
             print("Use '-ed' could result to parent folder residue. Manual check and delete is recommended.")
 
-        bf.merge(abspath=args.abspath)
+        bf.merge(abspath=args.abspath,relpath=args.path, force_relpath=args.relpath)
+        
+
 
     if not args.parent:
         fdir = bf.get_leaf_dir()
@@ -112,9 +114,13 @@ def run(args, parser):
         fdir.reverse()
 
     num = len(fdir)
+    
+    fdir = [str(i) for i in fdir]
 
     if args.not_print is True:
+        print("\nPaths:\n[")
         [print(i) for i in fdir]
+        print("]\n")
 
     print("Write Out File ...")
 
@@ -126,8 +132,8 @@ def run(args, parser):
         fdir = "\n".join(fdir)
         f.writelines(fdir)
 
-    print("The '{}' of {} paths are stored in '{}'.".format(args.store_name, num, str(os.getcwd())))
-    print("OK")
+    print("The '{}' with {} paths are stored in '{}'.".format(args.store_name, num, str(os.getcwd())))
+    print("Done.\n")
 
 
 class CLICommand:
@@ -147,6 +153,7 @@ class CLICommand:
                             action="store_false")
         parser.add_argument('-l', '--layer', help='dir depth, default the last layer.', type=str, default="-1")
         parser.add_argument('-abs', '--abspath', help='return abspath.', action="store_true")
+        parser.add_argument('-rel', '--relpath', help='return related path.', action="store_true")
         parser.add_argument('-o', '--store_name', help='out file name, default paths.temp.', type=str,
                             default="paths.temp")
         parser.add_argument('-np', '--not_print', help='not print.', action="store_false")

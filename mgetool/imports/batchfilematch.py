@@ -11,7 +11,7 @@ import warnings
 from fnmatch import translate
 from typing import Union, List
 
-from path import Path
+from pathlib import Path
 
 # patten >>>>>
 shell_patten_help = r"""
@@ -68,10 +68,85 @@ def shell_to_re_compile_pattern(pat, trans=True, single=True, ):
         print("------------------------\n")
         print("Wrong patten, check the forward message to change the match patten.\n")
         raise e
+    
+   
+def walk(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.walk()]
 
+def walkdirs(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i[0] for i in path.walk()]
+
+def walkfiles(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i[0]/ii for i in path.walk() for ii in i[2] if ii not in [".DS_Store", ".gitkeep"]]
+
+def rglob(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.rglob(patten)]
+
+def rglob_dir(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.rglob(patten) if i.is_dir()]
+
+def rglob_file(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.rglob(patten) if i.is_file()]
+
+def glob(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.glob(patten)]
+
+def glob_dir(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.glob(patten) if i.is_dir()]
+
+def glob_file(path, patten):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.glob(patten) if i.is_file()]
+
+def lsdir(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.iterdir() if i.is_dir()]
+
+def lsfile(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.iterdir() if i.is_file()]
+
+def ls(path):
+    """Get all the dirs in path."""
+    path = Path(path)
+    return [i for i in path.iterdir()]
+
+
+def absolute(path):
+    """Get all the dirs in path."""
+    path = Path(path).absolute()
+    return path
+
+
+def relative(path,root = "."):
+    """Get all the dirs in path."""
+    path = Path(path).relative_to(root)
+    # if str(path)[0] not in ["." or "/"]:
+    #    path = Path.joinpath(Path("."), path)
+    return path
+    
 
 class BatchPathMatch:
-    def __init__(self, path=".", patten: Union[str]=None, trans=True, abspath=False):
+    def __init__(self, path=".", patten: Union[str]=None, trans=True, abspath=False,relpath=False):
         """
 
         Parameters
@@ -89,16 +164,22 @@ class BatchPathMatch:
         self.path = Path(path)
         if patten is not None:
 
-            dir_list = self.path.walkdirs()
+            dir_list = walkdirs(path)
+
             patten = self._get_patten(patten)
             self.file_dir = list(self.filter(dir_list, pat=patten, trans=self.trans))
 
         else:
-            self.file_dir = list(self.path.walkdirs())
+            self.file_dir = walkdirs(path)
+        
         if abspath:
             self.dir_abspath()
+        if relpath:
+            self.dir_relpath(path)
         if len(self.file_dir)>1:
             self.file_dir.sort()
+    
+
 
     @staticmethod
     def _get_patten(my_strs):
@@ -123,7 +204,7 @@ class BatchPathMatch:
     @staticmethod
     def filter(names, pat, trans=True):
         smatch = shell_to_re_compile_pattern(pat, trans=trans).search
-        return [ni for ni in names if smatch(ni) is not None]
+        return [ni for ni in names if smatch(str(ni)) is not None]
 
     def get_leaf_dir(self, dirs=None):
         """Get the leaf dirs. Remove "." path."""
@@ -151,12 +232,15 @@ class BatchPathMatch:
         else:
             path = Path(path)
 
-        self.file_dir = [i.relpath(path) for i in self.file_dir]
+        self.file_dir = [i.relative_to(path) for i in self.file_dir]
 
+        # self.file_dir = [Path.joinpath(Path("."), i) if str(i)[0] not in ["." or "/"] else i for i in self.file_dir]
+
+        
     def dir_abspath(self,):
         """Get the real-path to input path."""
-
         self.file_dir = [i.absolute() for i in self.file_dir]
+
 
 
 class BatchFileMatch:
@@ -180,6 +264,7 @@ class BatchFileMatch:
     ...
     """
 
+
     def __init__(self, path=".", suffix=None, patten=None, trans=True):
         """
 
@@ -202,20 +287,20 @@ class BatchFileMatch:
         self.path = Path(path)
         if patten is not None:
 
-            file_list = self.path.walkfiles()
+            file_list = walkfiles(self.path)
             patten = self._get_patten(patten)
             self.file_list = list(self.filter(file_list, pat=patten, trans=self.trans))
 
         else:
             if suffix is not None:
                 if suffix[:2] == "*.":
-                    self.file_list = list(self.path.walkfiles(match=suffix))
+                    self.file_list = list(rglob_file(self.path,suffix))
                 elif suffix[0] != ".":
                     raise SyntaxError("suffix should be start from '.' ")
                 else:
-                    self.file_list = list(self.path.walkfiles(match=f"*{suffix}"))
+                    self.file_list = list(rglob_file(self.path,f"*{suffix}"))
             else:
-                self.file_list = list(self.path.walkfiles())
+                self.file_list = list(walkfiles(self.path))
 
         self.file_dir = []
         self.file_dir.sort()
@@ -230,7 +315,7 @@ class BatchFileMatch:
     @staticmethod
     def filter(names, pat, trans=True):
         smatch = shell_to_re_compile_pattern(pat, trans=trans).search
-        return [ni for ni in names if smatch(ni) is not None]
+        return [ni for ni in names if smatch(str(ni)) is not None]
 
     @staticmethod
     def searchcase(name, pat, trans=True):
@@ -263,7 +348,7 @@ class BatchFileMatch:
         return my_strs
 
 
-    def filter_file_name_parent_folder(self, exclude=None):
+    def filter_file_name_parent_folder(self, exclude=None,remove_parent=False):
         """
         filter the dir and sub-files contain the file!
 
@@ -285,11 +370,13 @@ class BatchFileMatch:
                 del_dirs = [self.file_list[r].parent for r, i in enumerate(files) if re.search(pt2, i) is not None]
 
             file_dir = list((set([i.parent for i in self.file_list])))
-            file_dir = self.get_leaf_dir(file_dir)
+            if remove_parent:
+                file_dir = self.get_leaf_dir(file_dir)
 
             keep_dirs = set(file_dir) - set(del_dirs)
             fs = []
-            [fs.extend(ki.files()) for ki in keep_dirs]
+
+            [fs.extend(lsfile(ki)) for ki in keep_dirs]
             self.file_list = fs
             self.file_dir = list(keep_dirs)
 
@@ -395,9 +482,9 @@ class BatchFileMatch:
                     elif layer == -1:  # 匹配最后一层目录
                         file_dir = [i.parent.name for i in self.file_list]
                     elif isinstance(layer, int):  # 匹配单层目录
-                        file_dir = [i.parent.splitall()[layer] for i in self.file_list]
+                        file_dir = [i.parent.parts[layer] for i in self.file_list]
                     elif isinstance(layer, (tuple, list)):  # 匹配多层目录
-                        file_dir = [i.parent.splitall() for i in self.file_list]
+                        file_dir = [i.parent.parts() for i in self.file_list]
                         file_dir = ["/".join([i[ll] for ll in layer]) for i in file_dir]
                     else:
                         raise NotImplementedError("Wrong type of 'layer'.")
@@ -426,18 +513,23 @@ class BatchFileMatch:
                         self.file_list = [self.file_list[r] for r, i in enumerate(file_dir) if
                                           re.search(pt2, i) is None]
 
-    def merge(self, abspath=False, force_relpath=False):
+    def merge(self, abspath=False, force_relpath=False, relpath=None):
         """Merge dir and file name together, Get dir names."""
+        if relpath is None:
+            relpath = self.path
 
         if abspath:
+
             self.file_list = [i.absolute() for i in self.file_list]
         else:
             if force_relpath:
-                self.file_list = [i.relpath(".") for i in self.file_list]
+                self.file_list = [i.relative_to(relpath) for i in self.file_list]
                 # add "./"
-                self.file_list = [Path.joinpath(".", i) if i[0] not in ["." or "/"] else i for i in self.file_list]
+                # self.file_list = [Path.joinpath(".", i) if str(i)[0] not in ["." or "/"] else i for i in self.file_list]
             else:
                 pass
+            
+
         file_dir = list((set([i.parent for i in self.file_list])))
         file_dir.sort()
         self.file_dir = file_dir
@@ -452,7 +544,7 @@ class BatchFileMatch:
         else:
             path = Path(path)
 
-        return [i.relpath(path) for i in self.file_list]
+        return [i.relative_to(path) for i in self.file_list]
 
     @staticmethod
     def _copy_user(i, j):
@@ -489,11 +581,11 @@ class BatchFileMatch:
         """Remove dirs."""
         if dirs is None:
             dirs = self.file_dir
-        [i.removedirs_p() for i in dirs]
+        [shutil.rmtree(i) for i in dirs]
 
     def copyfile_back(self, del_dir=True):
         """Just revert for 'copyfile' after 'copyfile'."""
-        [i.remove_p() for i in self._file_list_new]
+        [os.remove(i) for i in self._file_list_new]
         if del_dir:
             file_dir = list((set([i.parent for i in self._file_list_new])))
             self.removedirs_p(file_dir)
@@ -524,7 +616,7 @@ class BatchFileMatch:
             print("Empty file_list.")
         else:
             if self._rm_check > 2:
-                [i.remove_p() for i in self.file_list]
+                [os.rename(i) for i in self.file_list]
                 if del_dir:
                     file_dir = list((set([i.parent for i in self.file_list])))
                     self.removedirs_p(file_dir)
@@ -557,7 +649,7 @@ class BatchFileMatch:
         res = list(res)
         res.sort()
 
-        return dirs
+        return res
 
 # if __name__=="__main__":
 #     bfm = BatchFileMatch(r"C:\Users\Administrator\PycharmProjects\samples\Instance\Instance_mo2co2\MoCMo-O-4")

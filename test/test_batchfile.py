@@ -1,12 +1,14 @@
 from pathlib import Path
 
-from mgetool.imports import BatchFile
-from pymatgen.core import Structure
-import numpy as np
-import os
+
+from mgetool.imports.batchfilematch import BatchFileMatch,BatchPathMatch
 
 
-bf = BatchFile(r"./")
-#
-bf.filter_dir_name(include="ed_CONTCAR", layer=-2)
-bf.filter_dir_name(include=["Al", "Ca", "Li"], exclude=["Li"], layer=-2)
+bf = BatchPathMatch(r"D:\PycharmProjects\mgetool\test\bf")
+
+# bf.filter_dir_name(exclude="sf2")
+# bf.filter_file_name(include="asf.bmp")
+# bf.filter_file_name_parent_folder(exclude="asf.bmp")
+# bf.merge()
+print(bf.file_dir)
+# print(bf.file_list)
